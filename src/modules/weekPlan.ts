@@ -793,7 +793,12 @@ export class WeekPlanManager {
     if (!this.panelDoc) return;
 
     const board = this.panelDoc.getElementById("zoteroplan-board");
-    if (!board) return;
+    if (!board) {
+      ztoolkit.log("找不到看板元素");
+      return;
+    }
+
+    ztoolkit.log("开始初始化拖拽功能");
 
     // 拖拽增强：使用放置指示器，精确定位插入点，修复空列表及顶部/底部判定
     let draggedEl: HTMLElement | null = null;
@@ -803,7 +808,10 @@ export class WeekPlanManager {
     // 事件：dragstart - 统一绑定在看板容器上，使用事件委托
     board.addEventListener("dragstart", (e: Event) => {
       const target = e.target as HTMLElement;
-      if (!target || !target.classList.contains("zoteroplan-task")) return;
+      if (!target || !target.classList.contains("zoteroplan-task")) {
+        ztoolkit.log("拖拽的不是任务元素", target);
+        return;
+      }
 
       draggedEl = target;
       draggedEl.classList.add("dragging");
@@ -816,10 +824,14 @@ export class WeekPlanManager {
           draggedEl.dataset.id || "",
         );
       }
+
+      ztoolkit.log("开始拖拽任务:", draggedEl.dataset.id);
     });
 
     // 事件：dragend - 清理拖拽状态
-    board.addEventListener("dragend", () => {
+    board.addEventListener("dragend", (e: Event) => {
+      ztoolkit.log("拖拽结束");
+
       if (draggedEl) {
         draggedEl.classList.remove("dragging");
         draggedEl = null;
@@ -849,10 +861,21 @@ export class WeekPlanManager {
         e.dataTransfer.dropEffect = "move";
       }
 
-      // 找到目标列表
-      const targetList = (e.target as Element)?.closest(
-        ".zoteroplan-col-list",
-      ) as HTMLElement | null;
+      // 找到目标列表 - 改进选择器
+      let targetList: HTMLElement | null = null;
+      let target = e.target as Element;
+
+      // 向上查找直到找到列表容器
+      while (target && target !== board) {
+        if (
+          target.classList &&
+          target.classList.contains("zoteroplan-col-list")
+        ) {
+          targetList = target as HTMLElement;
+          break;
+        }
+        target = target.parentElement as Element;
+      }
 
       // 清理所有列表的 drag-over 状态
       this.columns.forEach((col) => {
@@ -909,13 +932,34 @@ export class WeekPlanManager {
       e.preventDefault();
       e.stopPropagation();
 
-      if (!draggedEl) return;
+      ztoolkit.log("执行放置操作");
 
-      const targetList = (e.target as Element)?.closest(
-        ".zoteroplan-col-list",
-      ) as HTMLElement | null;
+      if (!draggedEl) {
+        ztoolkit.log("没有拖拽元素");
+        return;
+      }
 
-      if (!targetList) return;
+      // 找到目标列表 - 改进选择器
+      let targetList: HTMLElement | null = null;
+      let target = e.target as Element;
+
+      while (target && target !== board) {
+        if (
+          target.classList &&
+          target.classList.contains("zoteroplan-col-list")
+        ) {
+          targetList = target as HTMLElement;
+          break;
+        }
+        target = target.parentElement as Element;
+      }
+
+      if (!targetList) {
+        ztoolkit.log("找不到目标列表");
+        return;
+      }
+
+      ztoolkit.log("放置到列表:", targetList.id);
 
       // 移除空状态提示
       const emptyState = targetList.querySelector(".zoteroplan-empty-state");
@@ -929,6 +973,8 @@ export class WeekPlanManager {
       } else {
         targetList.appendChild(draggedEl);
       }
+
+      ztoolkit.log("放置成功");
 
       // 检查源列表是否为空，如果为空则显示空状态
       this.columns.forEach((col) => {
@@ -950,6 +996,8 @@ export class WeekPlanManager {
       // 保存数据
       this.saveForWeek();
     });
+
+    ztoolkit.log("拖拽功能初始化完成");
   }
 
   /**

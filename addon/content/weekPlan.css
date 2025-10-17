@@ -524,18 +524,23 @@
    ========================================================================== */
 
 .zoteroplan-board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 16px;
-  flex: 1;
-  overflow: visible;
+  width: 100%;
+  height: auto;
+  min-height: 500px;
   margin-bottom: 20px;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .zoteroplan-column {
   background: var(--wp-card-bg);
   padding: 16px;
   border-radius: var(--wp-radius);
+  min-width: 280px;
+  flex: 1;
   min-height: 400px;
   max-height: 600px;
   border-top: 3px solid;
