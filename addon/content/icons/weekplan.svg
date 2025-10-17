@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Use context-fill/stroke so Zotero themes can color the icon -->
+  <g fill="context-fill" stroke="context-stroke" stroke-width="0">
+    <rect x="1.5" y="2.5" width="13" height="12" rx="2" ry="2" fill="context-fill" opacity="0.2"/>
+    <path d="M12.5 3.5h-9a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1Zm-6.7 6.8L3.9 8.4a.75.75 0 1 1 1.06-1.06l.97.97 3.12-3.12a.75.75 0 1 1 1.06 1.06L6.86 10.3a.75.75 0 0 1-1.06 0Z" fill="context-fill"/>
+  </g>
+</svg>
+
