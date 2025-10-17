@@ -131,7 +131,11 @@ export class WeekPlanManager {
       link.id = linkId;
       link.rel = "stylesheet";
       link.href = `chrome://${addon.data.config.addonRef}/content/weekPlan.css`;
-      doc.head.appendChild(link);
+      if (doc.head) {
+        doc.head.appendChild(link);
+      } else {
+        doc.documentElement?.appendChild(link);
+      }
     }
   }
 
@@ -1068,30 +1072,9 @@ export class WeekPlanManager {
     // 暂时使用默认头像
     this.userConfig.userAvatar = "default-avatar.png";
     this.saveUserConfig();
-    
-    // 头像上传功能暂时禁用，等待Zotero API支持
-    // .then((filePath: string | undefined) => {
-    //   if (filePath) {
-    //     // 读取文件并转换为 base64
-    //     const file = Zotero.File.pathToFile(filePath);
-    //     const base64 = btoa(Zotero.File.getBinaryContents(file));
-          const ext = filePath.split(".").pop()?.toLowerCase() || "png";
-          this.userConfig.userAvatar = `data:image/${ext};base64,${base64}`;
-          this.saveUserConfig();
 
-          // 更新头像显示
-          const avatar = this.panelDoc?.getElementById("zoteroplan-user-avatar");
-          if (avatar) {
-            avatar.innerHTML = "";
-            const img = this.panelDoc!.createElement("img");
-            img.src = this.userConfig.userAvatar;
-            avatar.appendChild(img);
-          }
-        }
-      })
-      .catch((err: any) => {
-        ztoolkit.log("Error uploading avatar:", err);
-      });
+    // 头像上传功能暂时禁用，等待Zotero API支持
+    // 注释掉的文件选择器代码
   }
 
   /**

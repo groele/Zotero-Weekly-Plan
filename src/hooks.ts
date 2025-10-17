@@ -1,12 +1,4 @@
-import {
-  BasicExampleFactory,
-  HelperExampleFactory,
-  KeyExampleFactory,
-  PromptExampleFactory,
-  UIExampleFactory,
-} from "./modules/examples";
 import { getString, initLocale } from "./utils/locale";
-import { registerPrefsScripts } from "./modules/preferenceScript";
 import { createZToolkit } from "./utils/ztoolkit";
 import { WeekPlanManager } from "./modules/weekPlan";
 
@@ -19,24 +11,8 @@ async function onStartup() {
 
   initLocale();
 
-  BasicExampleFactory.registerPrefs();
-
-  BasicExampleFactory.registerNotifier();
-
-  KeyExampleFactory.registerShortcuts();
-
-  await UIExampleFactory.registerExtraColumn();
-
-  await UIExampleFactory.registerExtraColumnWithCustomCell();
-
-  UIExampleFactory.registerItemPaneCustomInfoRow();
-
-  UIExampleFactory.registerItemPaneSection();
-
-  UIExampleFactory.registerReaderItemPaneSection();
-
   await Promise.all(
-    Zotero.getMainWindows().map((win) => onMainWindowLoad(win)),
+    Zotero.getMainWindows().map((win: Window) => onMainWindowLoad(win)),
   );
 
   // Mark initialized as true to confirm plugin loading status
@@ -70,20 +46,6 @@ async function onMainWindowLoad(win: Window): Promise<void> {
     text: `[30%] ${getString("startup-begin")}`,
   });
 
-  UIExampleFactory.registerStyleSheet(win);
-
-  UIExampleFactory.registerRightClickMenuItem();
-
-  UIExampleFactory.registerRightClickMenuPopup(win);
-
-  UIExampleFactory.registerWindowMenuWithSeparator();
-
-  PromptExampleFactory.registerNormalCommandExample();
-
-  PromptExampleFactory.registerAnonymousCommandExample(win);
-
-  PromptExampleFactory.registerConditionalCommandExample();
-
   // 注册周计划功能
   registerWeekPlanPanel(win);
 
@@ -95,7 +57,7 @@ async function onMainWindowLoad(win: Window): Promise<void> {
   });
   popupWin.startCloseTimer(5000);
 
-  addon.hooks.onDialogEvents("dialogExample");
+  // Examples removed
 }
 
 /**
@@ -104,13 +66,13 @@ async function onMainWindowLoad(win: Window): Promise<void> {
 function registerWeekPlanPanel(win: Window): void {
   const doc = win.document;
   const weekPlanManager = new WeekPlanManager();
-  
+
   // 添加到Zotero工具栏
   const toolsMenu = doc.getElementById("menu_Tools");
   if (toolsMenu) {
     const menuSeparator = doc.createElement("menuseparator");
     toolsMenu.appendChild(menuSeparator);
-    
+
     const weekPlanMenuItem = doc.createElement("menuitem");
     weekPlanMenuItem.id = "zoteroplan-menu-item";
     weekPlanMenuItem.setAttribute("label", "周计划");
@@ -120,20 +82,20 @@ function registerWeekPlanPanel(win: Window): void {
     });
     toolsMenu.appendChild(weekPlanMenuItem);
   }
-  
+
   // 添加到Zotero右侧面板
   const tabbox = doc.getElementById("zotero-item-pane-tabbox");
   if (tabbox) {
     const tabs = doc.getElementById("zotero-item-pane-tabs");
     const tabpanels = doc.getElementById("zotero-item-pane-tabpanels");
-    
+
     if (tabs && tabpanels) {
       // 创建标签页
       const tab = doc.createElement("tab");
       tab.id = "zoteroplan-tab";
       tab.setAttribute("label", "计划板");
       tabs.appendChild(tab);
-      
+
       // 创建标签面板
       const tabpanel = doc.createElement("tabpanel");
       tabpanel.id = "zoteroplan-tabpanel";
@@ -148,14 +110,14 @@ function registerWeekPlanPanel(win: Window): void {
  */
 function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
   const doc = win.document;
-  
+
   // 检查是否已存在
   let overlay = doc.getElementById("zoteroplan-overlay");
   if (overlay) {
     (overlay as HTMLElement).style.display = "flex";
     return;
   }
-  
+
   // 创建遮罩层
   overlay = doc.createElement("div");
   overlay.id = "zoteroplan-overlay";
@@ -171,7 +133,7 @@ function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
     justify-content: center;
     z-index: 10000;
   `;
-  
+
   // 创建内容容器
   const container = doc.createElement("div");
   (container as HTMLElement).style.cssText = `
@@ -182,7 +144,7 @@ function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
     overflow: hidden;
     position: relative;
   `;
-  
+
   // 添加关闭按钮
   const closeBtn = doc.createElement("button");
   closeBtn.textContent = "×";
@@ -203,12 +165,14 @@ function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
   closeBtn.addEventListener("click", () => {
     (overlay as HTMLElement).style.display = "none";
   });
-  
+
   // 添加面板
   container.appendChild(weekPlanManager.createPlanPanel(win));
   container.appendChild(closeBtn);
   overlay.appendChild(container);
-  doc.body.appendChild(overlay);
+  if (doc.body) {
+    doc.body.appendChild(overlay);
+  }
 }
 
 async function onMainWindowUnload(win: Window): Promise<void> {
@@ -234,17 +198,9 @@ async function onNotify(
   ids: Array<string | number>,
   extraData: { [key: string]: any },
 ) {
-  // You can add your code to the corresponding notify type
+  // Keep minimal notify logging for debugging
   ztoolkit.log("notify", event, type, ids, extraData);
-  if (
-    event == "select" &&
-    type == "tab" &&
-    extraData[ids[0]].type == "reader"
-  ) {
-    BasicExampleFactory.exampleNotifierCallback();
-  } else {
-    return;
-  }
+  return;
 }
 
 /**
@@ -253,50 +209,7 @@ async function onNotify(
  * @param type event type
  * @param data event data
  */
-async function onPrefsEvent(type: string, data: { [key: string]: any }) {
-  switch (type) {
-    case "load":
-      registerPrefsScripts(data.window);
-      break;
-    default:
-      return;
-  }
-}
-
-function onShortcuts(type: string) {
-  switch (type) {
-    case "larger":
-      KeyExampleFactory.exampleShortcutLargerCallback();
-      break;
-    case "smaller":
-      KeyExampleFactory.exampleShortcutSmallerCallback();
-      break;
-    default:
-      break;
-  }
-}
-
-function onDialogEvents(type: string) {
-  switch (type) {
-    case "dialogExample":
-      HelperExampleFactory.dialogExample();
-      break;
-    case "clipboardExample":
-      HelperExampleFactory.clipboardExample();
-      break;
-    case "filePickerExample":
-      HelperExampleFactory.filePickerExample();
-      break;
-    case "progressWindowExample":
-      HelperExampleFactory.progressWindowExample();
-      break;
-    case "vtableExample":
-      HelperExampleFactory.vtableExample();
-      break;
-    default:
-      break;
-  }
-}
+// Preferences, shortcuts, and example dialogs removed
 
 // Add your hooks here. For element click, etc.
 // Keep in mind hooks only do dispatch. Don't add code that does real jobs in hooks.
@@ -308,7 +221,4 @@ export default {
   onMainWindowLoad,
   onMainWindowUnload,
   onNotify,
-  onPrefsEvent,
-  onShortcuts,
-  onDialogEvents,
 };
