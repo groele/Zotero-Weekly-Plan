@@ -192,57 +192,59 @@ function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): v
     return;
   }
 
-  const tabId = "zoteroplan-tab-internal";
+  const tabId = (addon.data as any).weekPlanTabId || "zoteroplan-tab-internal";
   // 若已存在同名标签，则直接选中
   try {
     if (Tabs.getById && Tabs.getById(tabId)) {
       Tabs.select(tabId);
       return;
     }
-  } catch {}
+  } catch (e) {
+    ztoolkit.log(e);
+  }
 
   const title = getString("week-plan-title");
   const icon = `chrome://${addon.data.config.addonRef}/content/icons/weekplan.svg`;
+  const dataUrl = "data:text/html,"
+    + encodeURIComponent(
+      "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style='margin:0'></body></html>"
+    );
 
   // 创建一个空白浏览器标签，然后注入我们的面板
-  const created = Tabs.add({
-    id: tabId,
-    type: "browser",
-    title,
-    icon,
-    url: "about:blank",
-    select: true,
-  });
-
   try {
-    const browser: any = created?.browser || created?.panel || created?.iframe;
-    const onReady = () => {
-      const doc = (browser?.contentDocument || browser?.document) as Document | undefined;
-      if (!doc) return;
-      // 清空并挂载
-      doc.body && (doc.body.innerHTML = "");
-      const panel = weekPlanManager.createPlanPanel(win);
-      if (doc.body) {
-        doc.body.style.margin = "0";
-        doc.body.appendChild(panel);
-      } else {
-        doc.documentElement?.appendChild(panel);
+    Tabs.add({ id: tabId, type: "browser", title, icon, url: dataUrl, select: true });
+    (addon.data as any).weekPlanTabId = tabId;
+
+    const inject = () => {
+      try {
+        const tab = Tabs.getById ? Tabs.getById(tabId) : undefined;
+        const browser: any = tab?.browser || tab?.panel || tab?.iframe;
+        const doc = (browser?.contentDocument || browser?.document) as Document | undefined;
+        if (!doc) {
+          win.setTimeout(inject, 50);
+          return;
+        }
+        if (doc.body) {
+          doc.body.innerHTML = "";
+        }
+        const panel = weekPlanManager.createPlanPanel(win);
+        if (doc.body) {
+          doc.body.style.margin = "0";
+          doc.body.appendChild(panel);
+        } else {
+          doc.documentElement?.appendChild(panel);
+        }
+      } catch (e) {
+        ztoolkit.log(e);
+        win.setTimeout(inject, 50);
       }
     };
-
-    if (browser?.contentDocument?.readyState === "complete") {
-      onReady();
-    } else if (browser?.addEventListener) {
-      browser.addEventListener("load", function handle() {
-        browser.removeEventListener?.("load", handle);
-        onReady();
-      }, { once: true });
-    } else {
-      // 最后兜底
-      setTimeout(onReady, 50);
-    }
+    // 延迟注入，等待Zotero完成tab创建
+    win.setTimeout(inject, 0);
   } catch (e) {
     ztoolkit.log(e);
+    // 兜底：使用覆盖层方式
+    openWeekPlanTab(win, weekPlanManager);
   }
 }
 

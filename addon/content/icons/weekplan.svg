@@ -1,8 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <!-- Use context-fill/stroke so Zotero themes can color the icon -->
-  <g fill="context-fill" stroke="context-stroke" stroke-width="0">
-    <rect x="1.5" y="2.5" width="13" height="12" rx="2" ry="2" fill="context-fill" opacity="0.2"/>
-    <path d="M12.5 3.5h-9a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1Zm-6.7 6.8L3.9 8.4a.75.75 0 1 1 1.06-1.06l.97.97 3.12-3.12a.75.75 0 1 1 1.06 1.06L6.86 10.3a.75.75 0 0 1-1.06 0Z" fill="context-fill"/>
+  <!-- WeekPlan icon: calendar/kanban hybrid with a check badge. Theming via context-fill/stroke -->
+  <g fill="none" stroke="context-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.25">
+    <!-- calendar body background -->
+    <rect x="1.5" y="2.5" width="13" height="11" rx="2" ry="2" fill="context-fill" opacity="0.12"/>
+
+    <!-- calendar header bar -->
+    <path d="M2.2 5.2h11.6" />
+
+    <!-- binding rings -->
+    <path d="M5 2.2v1.2M11 2.2v1.2" />
+
+    <!-- kanban columns (3) -->
+    <path d="M4.3 6.4v6.1M8 6.4v6.1M11.7 6.4v6.1" opacity=".9"/>
+
+    <!-- sample task cards (subtle) -->
+    <path d="M3.2 7.5h1.8M3.2 9.1h1.8M6.8 8.2h1.8M10.4 10.2h1.8" opacity=".9"/>
+
+    <!-- check badge -->
+    <circle cx="11.8" cy="4.1" r="2.2" fill="context-fill" opacity=".22"/>
+    <path d="M10.4 4.1l.9.9 1.9-1.9" />
   </g>
 </svg>
 
