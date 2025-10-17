@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zotero Weekly Plan 图标预览</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 24px;
+        padding: 60px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #667eea;
+        margin-bottom: 16px;
+        font-size: 42px;
+        font-weight: 700;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #6c757d;
+        margin-bottom: 60px;
+        font-size: 18px;
+      }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 40px;
+        margin-bottom: 60px;
+      }
+
+      .icon-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+      }
+
+      .icon-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
+      }
+
+      .icon-card h3 {
+        margin-bottom: 20px;
+        color: #343a40;
+        font-size: 20px;
+      }
+
+      .icon-display {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 180px;
+      }
+
+      .icon-display img {
+        max-width: 100%;
+        height: auto;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+      }
+
+      .size-128 img {
+        width: 128px;
+        height: 128px;
+      }
+
+      .size-64 img {
+        width: 64px;
+        height: 64px;
+      }
+
+      .size-32 img {
+        width: 32px;
+        height: 32px;
+      }
+
+      .size-16 img {
+        width: 16px;
+        height: 16px;
+      }
+
+      .icon-info {
+        color: #6c757d;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .features {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 40px;
+      }
+
+      .features h2 {
+        margin-bottom: 24px;
+        font-size: 28px;
+      }
+
+      .features ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .features li {
+        padding: 12px 0;
+        padding-left: 32px;
+        position: relative;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .features li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+        font-size: 20px;
+      }
+
+      .color-palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .color-item {
+        text-align: center;
+      }
+
+      .color-box {
+        height: 80px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .color-name {
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 4px;
+      }
+
+      .color-code {
+        font-size: 12px;
+        color: #6c757d;
+        font-family: "Courier New", monospace;
+      }
+
+      .footer {
+        text-align: center;
+        color: #6c757d;
+        padding-top: 40px;
+        border-top: 2px solid #e9ecef;
+        font-size: 14px;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #20c997;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 Zotero Weekly Plan 图标设计</h1>
+      <p class="subtitle">
+        全新现代化图标系统 <span class="badge">SVG 矢量</span>
+      </p>
+
+      <div class="icon-grid">
+        <div class="icon-card">
+          <h3>主图标 (128×128)</h3>
+          <div class="icon-display size-128">
+            <img src="icon.svg" alt="主图标" />
+          </div>
+          <div class="icon-info">
+            <strong>icon.svg</strong><br />
+            用于插件扩展管理器<br />
+            渐变背景 + 三列看板<br />
+            包含日历和周标识
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <h3>工具栏图标 (16×16)</h3>
+          <div class="icon-display size-64">
+            <img
+              src="weekplan.svg"
+              alt="工具栏图标"
+              style="width: 48px; height: 48px"
+            />
+          </div>
+          <div class="icon-info">
+            <strong>weekplan.svg</strong><br />
+            用于 Zotero 工具栏按钮<br />
+            支持主题自适应<br />
+            简化的看板设计
+          </div>
+        </div>
+      </div>
+
+      <div class="features">
+        <h2>✨ 设计特点</h2>
+        <ul>
+          <li>采用 SVG 矢量格式，任意缩放不失真</li>
+          <li>现代渐变设计，视觉层次丰富</li>
+          <li>三列看板布局，直观展示任务流转</li>
+          <li>集成日历元素，强化周计划主题</li>
+          <li>"周"字徽章，突出中文品牌识别</li>
+          <li>支持 Zotero 主题适配 (context-fill/stroke)</li>
+          <li>文件体积小（< 5KB），加载快速</li>
+          <li>精致的阴影和渐变效果</li>
+        </ul>
+      </div>
+
+      <h2 style="margin-bottom: 24px; color: #343a40">🎨 配色方案</h2>
+      <div class="color-palette">
+        <div class="color-item">
+          <div
+            class="color-box"
+            style="background: linear-gradient(135deg, #667eea, #764ba2)"
+          ></div>
+          <div class="color-name">主渐变</div>
+          <div class="color-code">#667eea → #764ba2</div>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: #4dabf7"></div>
+          <div class="color-name">规划蓝</div>
+          <div class="color-code">#4dabf7</div>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: #fd7e14"></div>
+          <div class="color-name">进行橙</div>
+          <div class="color-code">#fd7e14</div>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: #20c997"></div>
+          <div class="color-name">完成绿</div>
+          <div class="color-code">#20c997</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>🚀 Zotero Weekly Plan - 让任务管理更高效</p>
+        <p style="margin-top: 8px">版本 1.0.0 | 2025-10-17</p>
+      </div>
+    </div>
+  </body>
+</html>

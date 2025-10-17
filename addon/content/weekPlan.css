@@ -11,7 +11,7 @@
   --wp-text-muted: #6c757d;
   --wp-border-color: rgba(0, 0, 0, 0.1);
   --wp-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  
+
   /* 列颜色 */
   --wp-col-plan: #339af0;
   --wp-col-todo: #845ef7;
@@ -21,14 +21,14 @@
   --wp-col-todo-light: rgba(132, 94, 247, 0.08);
   --wp-col-doing-light: rgba(253, 126, 20, 0.08);
   --wp-col-done-light: rgba(32, 201, 151, 0.08);
-  
+
   /* 其他颜色 */
   --wp-danger-text: #e03131;
   --wp-danger-bg-hover: rgba(224, 49, 49, 0.1);
   --wp-priority-high: #fa5252;
   --wp-priority-medium: #ffd43b;
   --wp-priority-low: #51cf66;
-  
+
   /* 间距 */
   --wp-col-gap: 18px;
   --wp-radius: 12px;
@@ -60,7 +60,8 @@
 .zoteroplan-container {
   background: var(--wp-bg);
   color: var(--wp-text-main);
-  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", "Microsoft Yahei", sans-serif;
+  font-family:
+    Inter, "Segoe UI", Roboto, "Helvetica Neue", "Microsoft Yahei", sans-serif;
   height: 100%;
   overflow: auto;
   scroll-behavior: smooth;
@@ -71,7 +72,13 @@
    ========================================================================== */
 
 .zoteroplan-user-card {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%), var(--wp-card-bg);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(102, 126, 234, 0.05) 0%,
+      rgba(118, 75, 162, 0.05) 100%
+    ),
+    var(--wp-card-bg);
   border-radius: var(--wp-radius);
   padding: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -468,19 +475,28 @@
 }
 
 .zoteroplan-progress-fill::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* ==========================================================================
@@ -509,7 +525,7 @@
 }
 
 .zoteroplan-column::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -628,22 +644,38 @@
 /* 任务按列着色 */
 .zoteroplan-column-planning .zoteroplan-task {
   border-left: 3px solid var(--wp-col-plan);
-  background: linear-gradient(to right, var(--wp-col-plan-light), var(--wp-card-bg));
+  background: linear-gradient(
+    to right,
+    var(--wp-col-plan-light),
+    var(--wp-card-bg)
+  );
 }
 
 .zoteroplan-column-todo .zoteroplan-task {
   border-left: 3px solid var(--wp-col-todo);
-  background: linear-gradient(to right, var(--wp-col-todo-light), var(--wp-card-bg));
+  background: linear-gradient(
+    to right,
+    var(--wp-col-todo-light),
+    var(--wp-card-bg)
+  );
 }
 
 .zoteroplan-column-doing .zoteroplan-task {
   border-left: 3px solid var(--wp-col-doing);
-  background: linear-gradient(to right, var(--wp-col-doing-light), var(--wp-card-bg));
+  background: linear-gradient(
+    to right,
+    var(--wp-col-doing-light),
+    var(--wp-card-bg)
+  );
 }
 
 .zoteroplan-column-done .zoteroplan-task {
   border-left: 3px solid var(--wp-col-done);
-  background: linear-gradient(to right, var(--wp-col-done-light), var(--wp-card-bg));
+  background: linear-gradient(
+    to right,
+    var(--wp-col-done-light),
+    var(--wp-card-bg)
+  );
 }
 
 /* 任务拖拽状态 */
@@ -665,8 +697,14 @@
 
 /* 新添加的任务动画 */
 @keyframes taskSlideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .zoteroplan-task.newly-added {
@@ -923,8 +961,14 @@
    ========================================================================== */
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .zoteroplan-container > * {
@@ -939,7 +983,7 @@
   .zoteroplan-board {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .zoteroplan-stats-panel {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -949,21 +993,21 @@
   .zoteroplan-board {
     grid-template-columns: 1fr;
   }
-  
+
   .zoteroplan-header-info {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .zoteroplan-stats-panel {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .zoteroplan-user-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .zoteroplan-user-avatar {
     width: 70px;
     height: 70px;

@@ -44,7 +44,7 @@ export class WeekPlanManager {
     userMotto: "今日事, 今日毕 🚀",
     theme: "light",
     showTimestamp: true,
-    autoSave: true
+    autoSave: true,
   };
 
   constructor() {
@@ -205,11 +205,13 @@ export class WeekPlanManager {
 
     const weekTotal = doc.createElement("span");
     weekTotal.className = "zoteroplan-user-stat-item";
-    weekTotal.innerHTML = '🎯 本周任务: <strong id="zoteroplan-user-week-total">0</strong>';
+    weekTotal.innerHTML =
+      '🎯 本周任务: <strong id="zoteroplan-user-week-total">0</strong>';
 
     const weekDone = doc.createElement("span");
     weekDone.className = "zoteroplan-user-stat-item";
-    weekDone.innerHTML = '✅ 已完成: <strong id="zoteroplan-user-week-done">0</strong>';
+    weekDone.innerHTML =
+      '✅ 已完成: <strong id="zoteroplan-user-week-done">0</strong>';
 
     statsMini.appendChild(weekTotal);
     statsMini.appendChild(weekDone);
@@ -304,7 +306,9 @@ export class WeekPlanManager {
     themeInput.type = "checkbox";
     themeInput.id = "zoteroplan-theme-toggle";
     themeInput.checked = this.userConfig.theme === "dark";
-    themeInput.addEventListener("change", (e) => this.toggleTheme((e.target as HTMLInputElement).checked));
+    themeInput.addEventListener("change", (e) =>
+      this.toggleTheme((e.target as HTMLInputElement).checked),
+    );
 
     const themeSlider = doc.createElement("span");
     themeSlider.className = "zoteroplan-theme-slider";
@@ -337,7 +341,9 @@ export class WeekPlanManager {
     searchInput.type = "text";
     searchInput.id = "zoteroplan-search-input";
     searchInput.placeholder = "🔍 搜索任务...";
-    searchInput.addEventListener("input", (e) => this.onSearch((e.target as HTMLInputElement).value));
+    searchInput.addEventListener("input", (e) =>
+      this.onSearch((e.target as HTMLInputElement).value),
+    );
 
     searchBar.appendChild(searchInput);
 
@@ -369,10 +375,10 @@ export class WeekPlanManager {
       { id: "todo", label: "待做", value: "0" },
       { id: "doing", label: "进行中", value: "0" },
       { id: "done", label: "已完成", value: "0" },
-      { id: "progress", label: "完成率", value: "0%", hasProgress: true }
+      { id: "progress", label: "完成率", value: "0%", hasProgress: true },
     ];
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       const card = doc.createElement("div");
       card.className = "zoteroplan-stat-card";
 
@@ -416,7 +422,7 @@ export class WeekPlanManager {
     board.className = "zoteroplan-board";
 
     // 创建四个列
-    this.columns.forEach(col => {
+    this.columns.forEach((col) => {
       const column = this.createColumn(doc, col);
       board.appendChild(column);
     });
@@ -432,7 +438,7 @@ export class WeekPlanManager {
       planning: "规划",
       todo: "待做",
       doing: "正在做",
-      done: "完成"
+      done: "完成",
     };
 
     const column = doc.createElement("div");
@@ -517,7 +523,7 @@ export class WeekPlanManager {
       planning: [],
       todo: [],
       doing: [],
-      done: []
+      done: [],
     };
 
     try {
@@ -530,8 +536,10 @@ export class WeekPlanManager {
     }
 
     // 渲染每个列的任务
-    this.columns.forEach(col => {
-      const listElement = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+    this.columns.forEach((col) => {
+      const listElement = this.panelDoc!.getElementById(
+        `zoteroplan-${col}List`,
+      );
       if (!listElement) return;
 
       listElement.innerHTML = "";
@@ -540,7 +548,7 @@ export class WeekPlanManager {
       if (tasksForColumn.length === 0) {
         this.showEmptyState(listElement as HTMLElement);
       } else {
-        tasksForColumn.forEach(taskData => {
+        tasksForColumn.forEach((taskData) => {
           const taskElement = this.renderTask(taskData);
           if (taskElement) {
             listElement.appendChild(taskElement);
@@ -567,27 +575,33 @@ export class WeekPlanManager {
       planning: [],
       todo: [],
       doing: [],
-      done: []
+      done: [],
     };
 
-    this.columns.forEach(col => {
+    this.columns.forEach((col) => {
       const tasks: Task[] = [];
-      const taskElements = this.panelDoc!.querySelectorAll(`#zoteroplan-${col}List .zoteroplan-task`);
+      const taskElements = this.panelDoc!.querySelectorAll(
+        `#zoteroplan-${col}List .zoteroplan-task`,
+      );
 
       taskElements.forEach((taskElement: Element) => {
         const htmlElement = taskElement as HTMLElement;
-        const contentElement = taskElement.querySelector(".zoteroplan-task-content");
+        const contentElement = taskElement.querySelector(
+          ".zoteroplan-task-content",
+        );
         if (contentElement && htmlElement.dataset.id) {
           const task: Task = {
             id: htmlElement.dataset.id,
             text: contentElement.textContent || "",
             created: htmlElement.dataset.created || new Date().toISOString(),
-            priority: (htmlElement.dataset.priority as any) || "none"
+            priority: (htmlElement.dataset.priority as any) || "none",
           };
 
           // 保存标签
           if (htmlElement.dataset.tags) {
-            task.tags = htmlElement.dataset.tags.split(",").filter(t => t.trim());
+            task.tags = htmlElement.dataset.tags
+              .split(",")
+              .filter((t) => t.trim());
           }
 
           // 保存备注
@@ -616,11 +630,14 @@ export class WeekPlanManager {
    * 渲染单个任务
    */
   private renderTask(taskData: Task): HTMLElement | null {
-    if (!this.panelDoc || !taskData || typeof taskData !== "object") return null;
+    if (!this.panelDoc || !taskData || typeof taskData !== "object")
+      return null;
 
     const taskElement = this.panelDoc.createElement("div");
     taskElement.className = "zoteroplan-task";
-    taskElement.dataset.id = taskData.id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    taskElement.dataset.id =
+      taskData.id ||
+      `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     taskElement.dataset.created = taskData.created || new Date().toISOString();
     taskElement.dataset.priority = taskData.priority || "none";
     taskElement.draggable = true;
@@ -652,7 +669,7 @@ export class WeekPlanManager {
     if (taskData.tags && taskData.tags.length > 0) {
       const tagsContainer = this.panelDoc.createElement("div");
       tagsContainer.className = "zoteroplan-task-tags";
-      taskData.tags.forEach(tag => {
+      taskData.tags.forEach((tag) => {
         const tagSpan = this.panelDoc!.createElement("span");
         tagSpan.className = "zoteroplan-tag";
         tagSpan.textContent = tag;
@@ -698,19 +715,8 @@ export class WeekPlanManager {
     meta.appendChild(delBtn);
     taskElement.appendChild(meta);
 
-    // 添加拖拽事件
-    taskElement.addEventListener("dragstart", (e) => {
-      taskElement.classList.add("zoteroplan-task-dragging");
-      const dragEvent = e as DragEvent;
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.effectAllowed = "move";
-        dragEvent.dataTransfer.setData("text/plain", taskElement.dataset.id || "");
-      }
-    });
-
-    taskElement.addEventListener("dragend", () => {
-      taskElement.classList.remove("zoteroplan-task-dragging");
-    });
+    // 不再在这里添加拖拽事件监听器，使用事件委托处理
+    // 拖拽事件已在 addEventListeners() 中统一处理
 
     // 右键菜单（可扩展）
     taskElement.addEventListener("contextmenu", (e) => {
@@ -727,7 +733,9 @@ export class WeekPlanManager {
   private addTask(column: string, text: string): void {
     if (!text.trim() || !this.panelDoc) return;
 
-    const listElement = this.panelDoc.getElementById(`zoteroplan-${column}List`);
+    const listElement = this.panelDoc.getElementById(
+      `zoteroplan-${column}List`,
+    );
     if (!listElement) return;
 
     // 移除空状态提示
@@ -740,7 +748,7 @@ export class WeekPlanManager {
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       text: text.trim(),
       created: new Date().toISOString(),
-      priority: "none"
+      priority: "none",
     };
 
     const taskElement = this.renderTask(taskData);
@@ -788,128 +796,210 @@ export class WeekPlanManager {
     if (!board) return;
 
     // 拖拽增强：使用放置指示器，精确定位插入点，修复空列表及顶部/底部判定
-    let draggedEl: Element | null = null;
+    let draggedEl: HTMLElement | null = null;
     const dropIndicator = this.panelDoc.createElement("div");
     dropIndicator.className = "zoteroplan-drop-indicator";
 
-    // 事件：dragstart/dragend 统一绑定在看板容器上
+    // 事件：dragstart - 统一绑定在看板容器上，使用事件委托
     board.addEventListener("dragstart", (e: Event) => {
-      const target = (e.target as Element) || null;
+      const target = e.target as HTMLElement;
       if (!target || !target.classList.contains("zoteroplan-task")) return;
+
       draggedEl = target;
-      (draggedEl as HTMLElement).classList.add("zoteroplan-task-dragging");
+      draggedEl.classList.add("zoteroplan-task-dragging");
+
       const dragEvent = e as DragEvent;
       if (dragEvent.dataTransfer) {
         dragEvent.dataTransfer.effectAllowed = "move";
-        dragEvent.dataTransfer.setData("text/plain", (draggedEl as HTMLElement).dataset.id || "");
+        dragEvent.dataTransfer.setData(
+          "text/plain",
+          draggedEl.dataset.id || "",
+        );
       }
     });
 
+    // 事件：dragend - 清理拖拽状态
     board.addEventListener("dragend", () => {
       if (draggedEl) {
-        (draggedEl as HTMLElement).classList.remove("zoteroplan-task-dragging");
+        draggedEl.classList.remove("zoteroplan-task-dragging");
         draggedEl = null;
       }
       dropIndicator.remove();
-      // 清理列上的 drag-over 状态
+
+      // 清理所有列的 drag-over 状态
       this.columns.forEach((col) => {
         const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-        listEl?.classList.remove("drag-over");
+        if (listEl) {
+          listEl.classList.remove("drag-over");
+        }
       });
+
+      // 保存数据并更新UI
       this.saveForWeek();
       this.applySearchFilter();
     });
 
-    // 事件：dragover/leave/drop 统一挂到 board，通过 closest 识别目标列表
+    // 事件：dragover - 显示放置指示器
     board.addEventListener("dragover", (e: DragEvent) => {
       if (!draggedEl) return;
       e.preventDefault();
-      const targetList = (e.target as Element)?.closest?.(
-        ".zoteroplan-col-list",
-      ) as Element | null;
+      e.stopPropagation();
 
-      // 清理所有列表的 drag-over
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move";
+      }
+
+      // 找到目标列表
+      const targetList = (e.target as Element)?.closest(
+        ".zoteroplan-col-list",
+      ) as HTMLElement | null;
+
+      // 清理所有列表的 drag-over 状态
       this.columns.forEach((col) => {
         const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-        el?.classList.remove("drag-over");
+        if (el) {
+          el.classList.remove("drag-over");
+        }
       });
 
-      if (!targetList) return;
+      if (!targetList) {
+        dropIndicator.remove();
+        return;
+      }
+
       targetList.classList.add("drag-over");
 
-      const after = this.getDragAfterElement(targetList, e.clientY);
-      if (after === undefined) {
+      // 计算应该放置的位置
+      const afterElement = this.getDragAfterElement(targetList, e.clientY);
+
+      if (afterElement === null) {
+        // 放在列表末尾
+        targetList.appendChild(dropIndicator);
+      } else if (afterElement === undefined) {
+        // 放在列表开头
         if (targetList.firstChild) {
           targetList.insertBefore(dropIndicator, targetList.firstChild);
         } else {
           targetList.appendChild(dropIndicator);
         }
-      } else if (after === null) {
-        targetList.appendChild(dropIndicator);
       } else {
-        targetList.insertBefore(dropIndicator, after as Element);
+        // 放在指定元素之前
+        targetList.insertBefore(dropIndicator, afterElement);
       }
     });
 
+    // 事件：dragleave - 清理状态
     board.addEventListener("dragleave", (e: DragEvent) => {
       const related = e.relatedTarget as Node | null;
-      // 当整体离开 board 或移出当前列表时，适度清理
+
+      // 只在完全离开看板时清理
       if (!board.contains(related)) {
         this.columns.forEach((col) => {
           const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-          el?.classList.remove("drag-over");
+          if (el) {
+            el.classList.remove("drag-over");
+          }
         });
         dropIndicator.remove();
       }
     });
 
+    // 事件：drop - 执行放置操作
     board.addEventListener("drop", (e: DragEvent) => {
-      if (!draggedEl) return;
       e.preventDefault();
-      const targetList = (e.target as Element)?.closest?.(
+      e.stopPropagation();
+
+      if (!draggedEl) return;
+
+      const targetList = (e.target as Element)?.closest(
         ".zoteroplan-col-list",
-      ) as Element | null;
+      ) as HTMLElement | null;
+
       if (!targetList) return;
+
+      // 移除空状态提示
+      const emptyState = targetList.querySelector(".zoteroplan-empty-state");
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      // 执行放置
       if (dropIndicator.parentNode === targetList) {
         targetList.insertBefore(draggedEl, dropIndicator);
       } else {
         targetList.appendChild(draggedEl);
       }
+
+      // 检查源列表是否为空，如果为空则显示空状态
+      this.columns.forEach((col) => {
+        const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+        if (listEl) {
+          const tasks = listEl.querySelectorAll(".zoteroplan-task");
+          if (
+            tasks.length === 0 &&
+            !listEl.querySelector(".zoteroplan-empty-state")
+          ) {
+            this.showEmptyState(listEl as HTMLElement);
+          }
+        }
+      });
+
+      // 清理指示器
+      dropIndicator.remove();
+
+      // 保存数据
       this.saveForWeek();
     });
   }
 
   /**
-   * 获取拖拽元素应该放置在哪个元素之后
+   * 获取拖拽元素应该放置在哪个元素之前
+   *
+   * @param container 目标列表容器
+   * @param y 鼠标的 Y 坐标
+   * @returns
+   *   - Element: 在该元素前插入
+   *   - undefined: 插入到列表顶部（列表为空或在第一个元素上方）
+   *   - null: 插入到列表底部
    */
-  // 更智能的定位：
-  // - 返回元素: 在该元素前插入
-  // - 返回 undefined: 插入到列表顶部
-  // - 返回 null: 插入到列表底部
-  private getDragAfterElement(container: Element, y: number): Element | null | undefined {
-    const candidates: Element[] = Array.from(container.querySelectorAll(".zoteroplan-task:not(.zoteroplan-task-dragging)"));
-    const listRect = container.getBoundingClientRect();
+  private getDragAfterElement(
+    container: Element,
+    y: number,
+  ): Element | null | undefined {
+    // 获取所有非拖拽中的任务元素
+    const candidates: Element[] = Array.from(
+      container.querySelectorAll(
+        ".zoteroplan-task:not(.zoteroplan-task-dragging)",
+      ),
+    );
 
+    // 如果列表为空，返回 undefined 表示插入到顶部
     if (candidates.length === 0) {
-      // 空列表：根据鼠标在上半/下半返回不同标记
-      const mid = listRect.top + listRect.height / 2;
-      return y < mid ? undefined : null;
+      return undefined;
     }
 
-    // 顶部/底部缓冲区域，减少误触
-    const topBuffer = listRect.top + listRect.height * 0.15;
-    const bottomBuffer = listRect.bottom - listRect.height * 0.05;
-    if (y < topBuffer) return candidates[0];
-    if (y > bottomBuffer) return null;
+    // 遍历所有候选元素，找到鼠标位置对应的插入点
+    let closestElement: Element | null = null;
+    let closestOffset = Number.NEGATIVE_INFINITY;
 
-    // 在任务间查找最近的插入点
-    for (let i = 0; i < candidates.length; i++) {
-      const box = (candidates[i] as HTMLElement).getBoundingClientRect();
+    for (const candidate of candidates) {
+      const box = candidate.getBoundingClientRect();
+      // 计算鼠标相对于元素中心的偏移
       const offset = y - box.top - box.height / 2;
-      if (offset < 0) return candidates[i];
+
+      // 如果鼠标在元素上半部分，且这是目前最接近的
+      if (offset < 0 && offset > closestOffset) {
+        closestOffset = offset;
+        closestElement = candidate;
+      }
     }
 
-    // 默认放在末尾
+    // 如果找到了元素，返回该元素（在它之前插入）
+    if (closestElement) {
+      return closestElement;
+    }
+
+    // 如果没有找到，说明应该插入到末尾
     return null;
   }
 
@@ -922,11 +1012,15 @@ export class WeekPlanManager {
     let totalTasks = 0;
     let doneTasks = 0;
 
-    this.columns.forEach(col => {
-      const countElement = this.panelDoc!.getElementById(`zoteroplan-count-${col}`);
+    this.columns.forEach((col) => {
+      const countElement = this.panelDoc!.getElementById(
+        `zoteroplan-count-${col}`,
+      );
       if (!countElement) return;
 
-      const taskElements = this.panelDoc!.querySelectorAll(`#zoteroplan-${col}List .zoteroplan-task`);
+      const taskElements = this.panelDoc!.querySelectorAll(
+        `#zoteroplan-${col}List .zoteroplan-task`,
+      );
       const count = taskElements.length;
       countElement.textContent = count.toString();
 
@@ -937,8 +1031,12 @@ export class WeekPlanManager {
     });
 
     // 更新用户卡片统计
-    const weekTotalEl = this.panelDoc.getElementById("zoteroplan-user-week-total");
-    const weekDoneEl = this.panelDoc.getElementById("zoteroplan-user-week-done");
+    const weekTotalEl = this.panelDoc.getElementById(
+      "zoteroplan-user-week-total",
+    );
+    const weekDoneEl = this.panelDoc.getElementById(
+      "zoteroplan-user-week-done",
+    );
 
     if (weekTotalEl) weekTotalEl.textContent = totalTasks.toString();
     if (weekDoneEl) weekDoneEl.textContent = doneTasks.toString();
@@ -953,8 +1051,10 @@ export class WeekPlanManager {
     let totalTasks = 0;
     const colCounts: { [key: string]: number } = {};
 
-    this.columns.forEach(col => {
-      const taskElements = this.panelDoc!.querySelectorAll(`#zoteroplan-${col}List .zoteroplan-task`);
+    this.columns.forEach((col) => {
+      const taskElements = this.panelDoc!.querySelectorAll(
+        `#zoteroplan-${col}List .zoteroplan-task`,
+      );
       const count = taskElements.length;
       colCounts[col] = count;
       totalTasks += count;
@@ -964,18 +1064,24 @@ export class WeekPlanManager {
     const statTotal = this.panelDoc.getElementById("zoteroplan-stat-total");
     if (statTotal) statTotal.textContent = totalTasks.toString();
 
-    this.columns.forEach(col => {
+    this.columns.forEach((col) => {
       const statEl = this.panelDoc!.getElementById(`zoteroplan-stat-${col}`);
       if (statEl) statEl.textContent = colCounts[col].toString();
     });
 
     // 更新进度
-    const progress = totalTasks > 0 ? Math.round((colCounts.done / totalTasks) * 100) : 0;
-    const statProgress = this.panelDoc.getElementById("zoteroplan-stat-progress");
-    const progressFill = this.panelDoc.getElementById("zoteroplan-progress-fill");
+    const progress =
+      totalTasks > 0 ? Math.round((colCounts.done / totalTasks) * 100) : 0;
+    const statProgress = this.panelDoc.getElementById(
+      "zoteroplan-stat-progress",
+    );
+    const progressFill = this.panelDoc.getElementById(
+      "zoteroplan-progress-fill",
+    );
 
     if (statProgress) statProgress.textContent = `${progress}%`;
-    if (progressFill) (progressFill as HTMLElement).style.width = `${progress}%`;
+    if (progressFill)
+      (progressFill as HTMLElement).style.width = `${progress}%`;
   }
 
   /**
@@ -1005,7 +1111,7 @@ export class WeekPlanManager {
       year: "numeric",
       month: "long",
       day: "numeric",
-      weekday: "long"
+      weekday: "long",
     };
     element.textContent = now.toLocaleDateString("zh-CN", options);
   }
@@ -1020,7 +1126,9 @@ export class WeekPlanManager {
     if (!clockEl) return;
 
     const updateClock = () => {
-      clockEl.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+      clockEl.textContent = new Date().toLocaleTimeString("zh-CN", {
+        hour12: false,
+      });
     };
 
     updateClock();
@@ -1073,8 +1181,10 @@ export class WeekPlanManager {
 
     if (!this.panelDoc) return;
 
-    this.columns.forEach(col => {
-      const listElement = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+    this.columns.forEach((col) => {
+      const listElement = this.panelDoc!.getElementById(
+        `zoteroplan-${col}List`,
+      );
       if (listElement) {
         listElement.innerHTML = "";
         this.showEmptyState(listElement as HTMLElement);
@@ -1122,13 +1232,17 @@ export class WeekPlanManager {
   private applySearchFilter(): void {
     if (!this.panelDoc) return;
 
-    this.columns.forEach(col => {
-      const tasks = this.panelDoc!.querySelectorAll(`#zoteroplan-${col}List .zoteroplan-task`);
+    this.columns.forEach((col) => {
+      const tasks = this.panelDoc!.querySelectorAll(
+        `#zoteroplan-${col}List .zoteroplan-task`,
+      );
       tasks.forEach((task: Element) => {
         const content = task.querySelector(".zoteroplan-task-content");
         if (content) {
           const text = content.textContent || "";
-          const visible = !this.searchQuery || text.toLowerCase().indexOf(this.searchQuery) >= 0;
+          const visible =
+            !this.searchQuery ||
+            text.toLowerCase().indexOf(this.searchQuery) >= 0;
           (task as HTMLElement).style.display = visible ? "" : "none";
         }
       });
@@ -1159,7 +1273,9 @@ export class WeekPlanManager {
       this.userConfig.userId = newId.trim();
       this.saveUserConfig();
 
-      const userIdText = this.panelDoc?.getElementById("zoteroplan-user-id-text");
+      const userIdText = this.panelDoc?.getElementById(
+        "zoteroplan-user-id-text",
+      );
       if (userIdText) {
         userIdText.textContent = this.userConfig.userId;
       }
@@ -1218,6 +1334,8 @@ export class WeekPlanManager {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return Math.ceil(
+      ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
   }
 }

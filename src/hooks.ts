@@ -184,8 +184,12 @@ function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
 /**
  * 在Zotero的主标签页系统中打开一个内部标签，类似PDF阅读器
  */
-function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): void {
-  const Tabs: any = (win as any).Zotero_Tabs || ztoolkit.getGlobal("Zotero_Tabs");
+function openWeekPlanZoteroTab(
+  win: Window,
+  weekPlanManager: WeekPlanManager,
+): void {
+  const Tabs: any =
+    (win as any).Zotero_Tabs || ztoolkit.getGlobal("Zotero_Tabs");
   if (!Tabs) {
     // 回退到覆盖层方式
     openWeekPlanTab(win, weekPlanManager);
@@ -209,14 +213,23 @@ function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): v
 
   // 创建一个空白浏览器标签，然后注入我们的面板
   try {
-    Tabs.add({ id: tabId, type: "browser", title, icon, url: htmlUrl, select: true });
+    Tabs.add({
+      id: tabId,
+      type: "browser",
+      title,
+      icon,
+      url: htmlUrl,
+      select: true,
+    });
     (addon.data as any).weekPlanTabId = tabId;
 
     const inject = () => {
       try {
         const tab = Tabs.getById ? Tabs.getById(tabId) : undefined;
         const browser: any = tab?.browser || tab?.panel || tab?.iframe;
-        const doc = (browser?.contentDocument || browser?.document) as Document | undefined;
+        const doc = (browser?.contentDocument || browser?.document) as
+          | Document
+          | undefined;
         if (!doc) {
           win.setTimeout(inject, 50);
           return;
@@ -245,24 +258,33 @@ function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): v
 function registerMainToolbarButton(win: Window): void {
   const doc = win.document;
   // 优先选择主工具栏，其次是条目工具栏
-  const toolbar = doc.getElementById("zotero-toolbar")
-    || doc.getElementById("zotero-items-toolbar");
+  const toolbar =
+    doc.getElementById("zotero-toolbar") ||
+    doc.getElementById("zotero-items-toolbar");
   if (!toolbar) return;
 
   // 已存在则跳过
   if (doc.getElementById("zoteroplan-toolbarbutton")) return;
 
   // 使用XUL元素创建按钮，确保图标按平台样式显示
-  const button = (doc as any).createXULElement?.("toolbarbutton")
-    || doc.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "toolbarbutton");
+  const button =
+    (doc as any).createXULElement?.("toolbarbutton") ||
+    doc.createElementNS(
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+      "toolbarbutton",
+    );
   button.id = "zoteroplan-toolbarbutton";
   button.classList.add("toolbarbutton-1", "chromeclass-toolbar-additional");
   button.setAttribute("label", getString("week-plan-menu"));
   button.setAttribute("tooltiptext", getString("week-plan-title"));
   button.setAttribute("type", "button");
-  button.setAttribute("image", `chrome://${addon.data.config.addonRef}/content/icons/weekplan.svg`);
+  button.setAttribute(
+    "image",
+    `chrome://${addon.data.config.addonRef}/content/icons/weekplan.svg`,
+  );
   button.addEventListener("command", () => {
-    const mgr: WeekPlanManager = (addon.data as any).weekPlanManager || new WeekPlanManager();
+    const mgr: WeekPlanManager =
+      (addon.data as any).weekPlanManager || new WeekPlanManager();
     (addon.data as any).weekPlanManager = mgr;
     openWeekPlanZoteroTab(win, mgr);
   });
@@ -272,7 +294,8 @@ function registerMainToolbarButton(win: Window): void {
 
 async function onMainWindowUnload(win: Window): Promise<void> {
   try {
-    const mgr: WeekPlanManager | undefined = (addon.data as any).weekPlanManager;
+    const mgr: WeekPlanManager | undefined = (addon.data as any)
+      .weekPlanManager;
     if (mgr) mgr.stopClock();
   } catch (e) {
     ztoolkit.log(e);
@@ -283,7 +306,8 @@ async function onMainWindowUnload(win: Window): Promise<void> {
 
 function onShutdown(): void {
   try {
-    const mgr: WeekPlanManager | undefined = (addon.data as any).weekPlanManager;
+    const mgr: WeekPlanManager | undefined = (addon.data as any)
+      .weekPlanManager;
     if (mgr) mgr.stopClock();
   } catch (e) {
     ztoolkit.log(e);

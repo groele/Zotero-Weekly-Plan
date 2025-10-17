@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A week planning board for Zotero",
   "config": {
-    "addonName": "Zotero Plan",
+    "addonName": "Zotero Weekly Plan",
     "addonID": "zotero-plan@zotero.org",
     "addonRef": "zotero-plan",
     "addonInstance": "ZoteroPlan",
@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/windingwind/zotero-plugin-template.git"
   },
-  "author": "windingwind",
+  "author": "Seking",
   "bugs": {
     "url": "https://github.com/windingwind/zotero-plugin-template/issues"
   },

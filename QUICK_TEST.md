@@ -3,6 +3,7 @@
 ## 📋 前置检查
 
 ### 1. 环境检查
+
 ```bash
 # 检查 Node.js 版本
 node --version  # 应该是 v18 或更高
@@ -12,6 +13,7 @@ node --version  # 应该是 v18 或更高
 ```
 
 ### 2. 依赖安装状态
+
 ```bash
 cd c:\Users\gro_e\Desktop\A1
 npm list --depth=0
@@ -22,27 +24,32 @@ npm list --depth=0
 ### 步骤 1: 配置环境变量 (首次运行)
 
 创建 `.env` 文件：
+
 ```env
 ZOTERO_PLUGIN_ZOTERO_BIN_PATH=C:\Program Files\Zotero\zotero.exe
 ZOTERO_PLUGIN_PROFILE_PATH=C:\Users\你的用户名\Zotero\Profiles\xxxxx.default
 ```
 
 ### 步骤 2: 安装依赖
+
 ```bash
 npm install --force
 ```
 
 如遇权限错误：
+
 - 关闭杀毒软件
 - 以管理员身份运行 PowerShell
 - 使用 `--force` 参数
 
 ### 步骤 3: 启动开发服务器
+
 ```bash
 npm start
 ```
 
 **预期输出**:
+
 ```
 > zotero-plan@1.0.0 start
 > zotero-plugin serve
@@ -130,12 +137,14 @@ Plugin loaded successfully
 **症状**: Zotero 启动后看不到"计划板"标签
 
 **检查**:
+
 ```javascript
 // 在 Zotero 开发者工具控制台中运行
-Zotero.getInstalledExtensions()
+Zotero.getInstalledExtensions();
 ```
 
 **解决**:
+
 1. 确认 `npm start` 运行成功
 2. 检查 Zotero 插件管理器
 3. 重启 Zotero
@@ -145,12 +154,14 @@ Zotero.getInstalledExtensions()
 **症状**: 界面显示但样式混乱
 
 **检查**:
+
 ```javascript
 // 在控制台检查
-document.getElementById('zoteroplan-stylesheet')
+document.getElementById("zoteroplan-stylesheet");
 ```
 
 **解决**:
+
 1. 确认 `addon/content/weekPlan.css` 文件存在
 2. 检查 manifest.json 配置
 3. 清除 Zotero 缓存
@@ -160,14 +171,17 @@ document.getElementById('zoteroplan-stylesheet')
 **症状**: 关闭后数据丢失
 
 **检查**:
+
 ```javascript
 // 查看存储的数据
-const keys = Object.keys(Zotero.Prefs._prefs)
-  .filter(k => k.includes('zoteroplan'));
+const keys = Object.keys(Zotero.Prefs._prefs).filter((k) =>
+  k.includes("zoteroplan"),
+);
 console.log(keys);
 ```
 
 **解决**:
+
 1. 确认 `autoSave` 配置为 true
 2. 检查 Zotero.Prefs 权限
 3. 查看控制台错误日志
@@ -177,6 +191,7 @@ console.log(keys);
 **症状**: 无法拖拽任务
 
 **解决**:
+
 1. 确认鼠标按住任务不松开
 2. 检查浏览器控制台错误
 3. 刷新页面重试
@@ -198,10 +213,11 @@ function addBulkTasks(column, count) {
 }
 
 // 添加 100 个任务到"待做"列
-addBulkTasks('todo', 100);
+addBulkTasks("todo", 100);
 ```
 
 **性能指标**:
+
 - [ ] 100个任务：流畅无卡顿
 - [ ] 拖拽响应：< 100ms
 - [ ] 搜索响应：实时过滤
@@ -218,6 +234,7 @@ addBulkTasks('todo', 100);
 **插件版本**: 1.0.1
 
 ### 功能测试结果
+
 - 侧边栏集成: ✅/❌
 - 工具菜单: ✅/❌
 - 用户信息管理: ✅/❌
@@ -230,14 +247,17 @@ addBulkTasks('todo', 100);
 - 数据持久化: ✅/❌
 
 ### 发现的问题
+
 1. [描述问题]
 2. [描述问题]
 
 ### 建议改进
+
 1. [建议]
 2. [建议]
 
 ### 总体评价
+
 ⭐⭐⭐⭐⭐ (1-5星)
 ```
 

@@ -1,5 +1,5 @@
 # Preferences Window
-pref-title = Zotero Plan Preferences
+pref-title = Zotero Weekly Plan Preferences
 pref-enable =
     .label = Enable
 pref-input = Input

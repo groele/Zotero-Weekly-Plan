@@ -1,13 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "Zotero Plan",
+  "name": "Zotero Weekly Plan",
   "version": "1.0.0",
   "description": "A week planning board for Zotero",
   "homepage_url": "https://github.com/windingwind/zotero-plugin-template#readme",
-  "author": "windingwind",
+  "author": "Seking",
   "icons": {
-    "48": "content/icons/favicon@0.5x.png",
-    "96": "content/icons/favicon.png"
+    "16": "content/icons/icon.svg",
+    "32": "content/icons/icon.svg",
+    "48": "content/icons/icon.svg",
+    "96": "content/icons/icon.svg"
   },
   "applications": {
     "zotero": {
