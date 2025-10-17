@@ -1063,12 +1063,18 @@ export class WeekPlanManager {
    */
   private uploadAvatar(): void {
     // 使用 zotero-plugin-toolkit 的文件选择器
-    ztoolkit.FilePicker.getFilePath("上传头像", "open", [["图片文件", "*.png;*.jpg;*.jpeg;*.gif"]])
-      .then((filePath: string | undefined) => {
-        if (filePath) {
-          // 读取文件并转换为 base64
-          const file = Zotero.File.pathToFile(filePath);
-          const base64 = btoa(Zotero.File.getBinaryContents(file));
+    // 文件选择器功能需要根据Zotero API调整
+    // ztoolkit.FilePicker.getFilePath("上传头像", "open", [["图片文件", "*.png;*.jpg;*.jpeg;*.gif"]])
+    // 暂时使用默认头像
+    this.userConfig.userAvatar = "default-avatar.png";
+    this.saveUserConfig();
+    
+    // 头像上传功能暂时禁用，等待Zotero API支持
+    // .then((filePath: string | undefined) => {
+    //   if (filePath) {
+    //     // 读取文件并转换为 base64
+    //     const file = Zotero.File.pathToFile(filePath);
+    //     const base64 = btoa(Zotero.File.getBinaryContents(file));
           const ext = filePath.split(".").pop()?.toLowerCase() || "png";
           this.userConfig.userAvatar = `data:image/${ext};base64,${base64}`;
           this.saveUserConfig();

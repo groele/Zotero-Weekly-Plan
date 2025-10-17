@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Zotero Plugin Template
 
 [![zotero target version](https://img.shields.io/badge/Zotero-7-green?style=flat-square&logo=zotero&logoColor=CC2936)](https://www.zotero.org)
@@ -410,3 +411,8 @@ This section shows the directory structure of a template.
 Use this code under AGPL. No warranties are provided. Keep the laws of your locality in mind!
 
 If you want to change the license, please contact me at <wyzlshx@foxmail.com>
+=======
+# Zotero-Weekly-Plan
+
+Automatically initialized project.
+>>>>>>> 720cc0a00ababe301153c278d5a4cc7334a216f9
