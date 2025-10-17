@@ -968,9 +968,7 @@ export class WeekPlanManager {
   ): Element | null | undefined {
     // 获取所有非拖拽中的任务元素
     const candidates: Element[] = Array.from(
-      container.querySelectorAll(
-        ".zoteroplan-task:not(.dragging)",
-      ),
+      container.querySelectorAll(".zoteroplan-task:not(.dragging)"),
     );
 
     // 空列表时，根据鼠标位置返回不同值
