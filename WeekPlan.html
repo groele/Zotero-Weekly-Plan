@@ -1,0 +1,2230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>周任务面板 — 高级版</title>
+  <style>
+    :root{
+      --bg: #f8f9fa; --card-bg: #ffffff; --accent: #007bff; --text-main: #343a40; 
+      --text-muted: #6c757d; --border-color: rgba(0,0,0,0.1); --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      --col-plan: #339af0; --col-todo: #845ef7; --col-doing: #fd7e14; --col-done: #20c997;
+      --col-plan-light: rgba(51, 154, 240, 0.08); --col-todo-light: rgba(132, 94, 247, 0.08);
+      --col-doing-light: rgba(253, 126, 20, 0.08); --col-done-light: rgba(32, 201, 151, 0.08);
+      --danger-text: #e03131; --danger-bg-hover: rgba(224, 49, 49, 0.1);
+      --col-gap:18px; --radius:12px; --panel-padding:18px;
+      --priority-high: #fa5252; --priority-medium: #ffd43b; --priority-low: #51cf66;
+    }
+    [data-theme="dark"] {
+      --bg: #1a1a1a; --card-bg: #2d2d2d; --accent: #4dabf7; --text-main: #e9ecef; 
+      --text-muted: #adb5bd; --border-color: rgba(255,255,255,0.1); --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --col-plan-light: rgba(51, 154, 240, 0.15); --col-todo-light: rgba(132, 94, 247, 0.15);
+      --col-doing-light: rgba(253, 126, 20, 0.15); --col-done-light: rgba(32, 201, 151, 0.15);
+      --danger-text: #ff6b6b; --danger-bg-hover: rgba(255, 107, 107, 0.1);
+    }
+    *{box-sizing:border-box;font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", "Microsoft Yahei", sans-serif;}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text-main); scroll-behavior: smooth;}
+    
+    /* 页面加载动画 */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .app{max-width:1200px;margin:28px auto;padding:18px; animation: fadeInUp 0.6s ease-out;}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px; flex-wrap: wrap; gap: 12px;}
+    header h1{font-size:28px;margin:0; color: var(--text-main); font-weight: 700; letter-spacing: -0.5px;}
+    .header-info { display: flex; align-items: center; gap: 16px; }
+    .week-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    #currentDate { font-size: 15px; color: var(--accent); font-weight: 600; margin-right: 12px; padding: 6px 12px; background: rgba(0, 123, 255, 0.08); border-radius: 6px; }
+    #liveClock { font-size: 17px; color: var(--text-main); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .btn{background:var(--card-bg);border:1px solid var(--border-color);padding:9px 14px;border-radius:8px;cursor:pointer;color: var(--text-main);transition: all 0.2s ease; font-weight: 500;}
+    .btn:hover{background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25); transform: translateY(-1px);}
+    .btn:active{transform:translateY(0px)}
+    .btn:disabled {cursor: not-allowed; opacity: 0.5; background: #f1f3f5; transform: none;}
+    .btn.danger { color: var(--danger-text); border-color: var(--danger-text); }
+    .btn.danger:hover { background: var(--danger-text); color: white; box-shadow: 0 2px 8px rgba(224, 49, 49, 0.25); }
+    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--col-gap)}
+    .column{background: var(--card-bg);padding:var(--panel-padding);border-radius:var(--radius);min-height:320px;border-top: 4px solid;transition: all 0.3s ease; position: relative; overflow: hidden;}
+    .column::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.05; pointer-events: none; transition: opacity 0.3s; }
+    .column:hover::before { opacity: 0.08; }
+    [data-theme="dark"] .column { background: #262626; }
+    .column[data-column="planning"] { border-color: var(--col-plan); }
+    .column[data-column="planning"]::before { background: linear-gradient(135deg, var(--col-plan) 0%, #4dabf7 100%); }
+    .column[data-column="todo"] { border-color: var(--col-todo); }
+    .column[data-column="todo"]::before { background: linear-gradient(135deg, var(--col-todo) 0%, #9775fa 100%); }
+    .column[data-column="doing"] { border-color: var(--col-doing); }
+    .column[data-column="doing"]::before { background: linear-gradient(135deg, var(--col-doing) 0%, #ff922b 100%); }
+    .column[data-column="done"] { border-color: var(--col-done); }
+    .column[data-column="done"]::before { background: linear-gradient(135deg, var(--col-done) 0%, #51cf66 100%); }
+    .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .col-title{font-weight:700; font-size: 1.15em; letter-spacing: -0.3px;}
+    .task-count { background: var(--accent); color: white; padding: 3px 9px; border-radius: 12px; font-size: 12px; margin-left: 8px; font-weight: 600; min-width: 24px; text-align: center; box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3); }
+    .col-list{min-height:200px;display:flex;flex-direction:column;gap:10px}
+    .task{background: var(--card-bg);padding:14px;border-radius:10px;border:1px solid var(--border-color);cursor:grab; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;}
+    .task:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12); border-color: var(--accent); }
+    /* 任务卡片按栏目着色 */
+    .column[data-column="planning"] .task { border-left: 3px solid var(--col-plan); background: linear-gradient(to right, var(--col-plan-light), var(--card-bg)); }
+    .column[data-column="todo"] .task { border-left: 3px solid var(--col-todo); background: linear-gradient(to right, var(--col-todo-light), var(--card-bg)); }
+    .column[data-column="doing"] .task { border-left: 3px solid var(--col-doing); background: linear-gradient(to right, var(--col-doing-light), var(--card-bg)); }
+    .column[data-column="done"] .task { border-left: 3px solid var(--col-done); background: linear-gradient(to right, var(--col-done-light), var(--card-bg)); }
+    /* 任务添加动画 */
+    @keyframes taskSlideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .task.newly-added { animation: taskSlideIn 0.4s ease-out; }
+    .task[data-priority="high"] { border-left: 4px solid var(--priority-high); }
+    .task[data-priority="medium"] { border-left: 4px solid var(--priority-medium); }
+    .task[data-priority="low"] { border-left: 4px solid var(--priority-low); }
+    .task-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+    .tag { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+    .priority-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; }
+    .priority-badge.high { background: var(--priority-high); }
+    .priority-badge.medium { background: var(--priority-medium); }
+    .priority-badge.low { background: var(--priority-low); }
+    .task-note { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: italic; border-top: 1px dashed var(--border-color); padding-top: 6px; }
+    .task.dragging{opacity:0.9;transform:scale(0.98);background: var(--accent); color: white;}
+    .task.dragging .meta, .task.dragging .del-btn { color: white; opacity: 0.8; }
+    .task .content:focus { outline:2px solid var(--accent); }
+    .meta{display:flex;justify-content:space-between;align-items: center;margin-top:8px;font-size:12px;color:var(--text-muted)}
+    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 14px; }
+    .del-btn:hover { background-color: var(--danger-bg-hover); color: var(--danger-text); }
+    .drop-indicator { height: 50px; background-color: rgba(0, 123, 255, 0.1); border: 2px dashed var(--accent); border-radius: 8px; margin: 5px 0; }
+    .small{font-size:13px;color:var(--text-muted)}
+    #weekNumberLabel { font-weight: 500; color: var(--accent); margin-left: 4px; }
+    .add-row{display:flex;gap:6px;margin-top:12px}
+    .add-row button { transition: all 0.2s ease; }
+    .add-row button:not(:disabled):hover { transform: scale(1.05); }
+    input[type='text']{flex:1;padding:10px 14px;border-radius:8px;border:2px solid var(--border-color);background:var(--card-bg);color:inherit; transition: all 0.2s ease; font-size: 14px;}
+    input[type='text']:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,123,255,0.12); transform: translateY(-1px); }
+    footer{margin-top:24px;color:var(--text-muted);font-size:13px; text-align: center; padding: 16px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);}
+    footer::before { content: '💡 '; }
+    footer .shortcut-hint { display: inline-block; margin-left: 12px; padding: 4px 8px; background: var(--bg); border-radius: 4px; font-size: 11px; }
+    
+    /* ✨ 新增：设置模态框样式 */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000; }
+    .modal.visible { opacity: 1; pointer-events: auto; }
+    .modal-content { background: var(--card-bg); padding: 24px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 500px; transform: scale(0.95); transition: transform 0.3s; }
+    .modal.visible .modal-content { transform: scale(1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;}
+    .modal-header h2 { margin: 0; font-size: 18px; }
+    .close-btn { font-size: 24px; cursor: pointer; color: var(--text-muted); background: none; border: none; }
+    .settings-section { margin-bottom: 20px; }
+    .settings-section h3 { margin: 0 0 12px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .settings-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search-bar { display: flex; align-items: center; }
+    .search-bar input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--card-bg); padding: 16px; border-radius: 10px; text-align: center; border: 2px solid var(--border-color); transition: all 0.2s ease; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15); border-color: var(--accent); }
+    .stat-number { font-size: 28px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .toggle-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(24px); }
+    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
+    .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
+    /* 空状态提示 */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state-text { font-size: 14px; line-height: 1.6; }
+    
+    /* 进度条优化 */
+    .progress-bar { width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden; margin-top: 8px; position: relative; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent) 0%, #4dabf7 100%); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+    .progress-fill::after { content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s infinite; }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    /* 用户卡片样式 */
+    .user-card { background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%), var(--card-bg); border-radius: var(--radius); padding: 24px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); margin-bottom: 28px; display: flex; align-items: center; gap: 20px; border: 2px solid rgba(102, 126, 234, 0.15); transition: all 0.3s ease; }
+    .user-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); border-color: rgba(102, 126, 234, 0.3); }
+    .user-avatar-wrapper { position: relative; }
+    .user-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 36px; font-weight: 700; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .user-avatar:hover { transform: scale(1.08) rotate(5deg); border-color: var(--col-doing); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+    .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: var(--accent); color: white; border: 2px solid var(--card-bg); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+    .avatar-upload-btn:hover { background: var(--col-doing); }
+    .user-info { flex: 1; }
+    .user-id { font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0; display: flex; align-items: center; gap: 10px; }
+    .user-id-edit { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; }
+    .user-id-edit:hover { background: var(--border-color); }
+    .user-motto { font-size: 15px; color: var(--text-muted); font-style: italic; margin: 0 0 10px 0; line-height: 1.6; cursor: pointer; transition: all 0.2s; }
+    .user-motto:hover { color: var(--accent); transform: translateX(2px); }
+    .user-motto::before { content: '"'; }
+    .user-motto::after { content: '"'; }
+    .user-stats-mini { display: flex; gap: 12px; margin-top: 8px; }
+    .user-stat-item { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .user-stat-item strong { color: var(--accent); font-weight: 700; font-size: 15px; }
+    
+    /* 快捷键提示 */
+    .keyboard-hint { position: fixed; bottom: 20px; right: 20px; background: var(--card-bg); padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 12px; color: var(--text-muted); border: 1px solid var(--border-color); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; }
+    .keyboard-hint.show { opacity: 1; }
+    .keyboard-hint kbd { background: var(--bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); font-family: monospace; margin: 0 2px; }
+    
+    @media (max-width:900px){.board{grid-template-columns:repeat(2,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}.keyboard-hint{display:none;}}
+    @media (max-width:600px){.board{grid-template-columns:1fr}.app{padding:12px}.header-info{width:100%;justify-content:space-between}.stats-grid{grid-template-columns:repeat(2,1fr)}.user-card{flex-direction:column;text-align:center}.user-avatar{width:70px;height:70px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 用户个人信息卡片 -->
+    <div class="user-card">
+      <div class="user-avatar-wrapper">
+        <div class="user-avatar" id="userAvatar">
+          <span id="avatarInitial">U</span>
+          <img id="avatarImg" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;" />
+        </div>
+        <div class="avatar-upload-btn" id="avatarUploadBtn" title="上传头像">📷</div>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+      </div>
+      <div class="user-info">
+        <h2 class="user-id">
+          <span id="userIdDisplay">我的任务看板</span>
+          <button class="user-id-edit" id="editUserId" title="编辑用户ID">✏️</button>
+        </h2>
+        <p class="user-motto" id="userMotto" title="点击编辑格言">今日事, 今日毕 🚀</p>
+        <div class="user-stats-mini">
+          <span class="user-stat-item">🎯 本周任务: <strong id="userWeekTotal">0</strong></span>
+          <span class="user-stat-item">✅ 已完成: <strong id="userWeekDone">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <h1>📊 周任务看板</h1>
+      <div class="header-info">
+        <div class="week-controls">
+          <div id="currentDate" style="font-size: 13px; color: var(--text-muted); margin-right: 12px;"></div>
+          <button class="btn" id="prevWeek" title="上一周">◀</button>
+          <div class="small" id="weekLabel">——</div>
+          <div class="small" id="weekNumberLabel"></div>
+          <button class="btn" id="nextWeek" title="下一周">▶</button>
+          <button class="btn" id="todayBtn">本周</button>
+          <button class="btn danger" id="clearBtn" title="清空本周所有任务">清空</button>
+        </div>
+        <div id="liveClock"></div>
+        <label class="toggle-switch" title="切换深色模式">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+        <button class="btn" id="settingsBtn" title="设置">⚙️</button>
+      </div>
+    </header>
+
+    <!-- 搜索和工具栏 -->
+    <div class="toolbar">
+      <div class="search-bar" style="flex: 1;">
+        <input type="text" id="searchInput" placeholder="🔍 搜索任务..." />
+      </div>
+      <button class="btn" id="statsBtn" title="查看统计">📈 统计</button>
+    </div>
+
+    <!-- 统计面板 -->
+    <div id="statsPanel" class="stats-grid" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">总任务</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statPlanning">0</div>
+        <div class="stat-label">规划中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statTodo">0</div>
+        <div class="stat-label">待做</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statDoing">0</div>
+        <div class="stat-label">进行中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statDone">0</div>
+        <div class="stat-label">已完成</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statProgress">0%</div>
+        <div class="stat-label">完成率</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </div>
+
+    <main class="board" id="board">
+      <section class="column" data-column="planning">
+        <div class="col-header">
+          <div style="display:flex;align-items:center;">
+            <div class="col-title">规划</div>
+            <span class="task-count" id="count-planning">0</span>
+          </div>
+          <div class="small">Ideas</div>
+        </div>
+        <div class="col-list" id="planningList"></div>
+        <div class="add-row">
+          <input type="text" placeholder="添加到规划..." id="input-planning" />
+          <button class="btn" data-add-to="planning" disabled>添加</button>
+        </div>
+      </section>
+      <section class="column" data-column="todo">
+        <div class="col-header">
+          <div style="display:flex;align-items:center;">
+            <div class="col-title">待做</div>
+            <span class="task-count" id="count-todo">0</span>
+          </div>
+          <div class="small">To Do</div>
+        </div>
+        <div class="col-list" id="todoList"></div>
+        <div class="add-row">
+          <input type="text" placeholder="添加到待做..." id="input-todo" />
+          <button class="btn" data-add-to="todo" disabled>添加</button>
+        </div>
+      </section>
+      <section class="column" data-column="doing">
+        <div class="col-header">
+          <div style="display:flex;align-items:center;">
+            <div class="col-title">正在做</div>
+            <span class="task-count" id="count-doing">0</span>
+          </div>
+          <div class="small">In Progress</div>
+        </div>
+        <div class="col-list" id="doingList"></div>
+        <div class="add-row">
+          <input type="text" placeholder="添加到正在做..." id="input-doing" />
+          <button class="btn" data-add-to="doing" disabled>添加</button>
+        </div>
+      </section>
+      <section class="column" data-column="done">
+        <div class="col-header">
+          <div style="display:flex;align-items:center;">
+            <div class="col-title">完成</div>
+            <span class="task-count" id="count-done">0</span>
+          </div>
+          <div class="small">Done</div>
+        </div>
+        <div class="col-list" id="doneList"></div>
+        <div class="add-row">
+          <input type="text" placeholder="添加到完成..." id="input-done" />
+          <button class="btn" data-add-to="done" disabled>添加</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      📝 双击编辑 | 🖱️ 拖拽移动 | 💾 自动保存 | 📅 每周独立存储
+      <span class="shortcut-hint">快捷键: <kbd>Ctrl</kbd>+<kbd>K</kbd> 搜索 | <kbd>Ctrl</kbd>+<kbd>S</kbd> 统计</span>
+    </footer>
+  </div>
+
+  <!-- 快捷键提示 -->
+  <div class="keyboard-hint" id="keyboardHint">
+    ⌨️ 快捷键已启用
+  </div>
+
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ 设置</h2>
+        <button class="close-btn" id="closeSettingsBtn">&times;</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">
+          <h3>📊 数据管理</h3>
+          <p class="small">导出当前周的数据为文件,用于备份或在其他应用中使用。</p>
+          <div class="settings-actions">
+            <button class="btn" id="exportJsonBtn">💾 导出JSON</button>
+            <button class="btn" id="exportCsvBtn">📄 导出CSV</button>
+            <button class="btn" id="exportImageBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">🎆 生成成就卡片</button>
+            <div class="file-input-wrapper">
+              <button class="btn">📂 导入JSON</button>
+              <input type="file" id="importJsonInput" accept=".json" />
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>🎨 个性化</h3>
+          <p class="small">自定义您的任务看板外观和行为。</p>
+          <div class="settings-actions">
+            <label>
+              <input type="checkbox" id="autoSaveToggle" checked /> 自动保存
+            </label>
+            <label>
+              <input type="checkbox" id="showTimestampToggle" checked /> 显示时间戳
+            </label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>👤 用户信息</h3>
+          <p class="small">管理您的个人资料和个性化设置。</p>
+          <div class="settings-actions">
+            <button class="btn" id="resetProfileBtn">🔄 重置个人信息</button>
+            <button class="btn danger" id="clearAvatarBtn">🗑️ 清除头像</button>
+          </div>
+        </div>
+        </div>
+    </div>
+  </div>
+
+
+  <script>
+    // 全局错误处理
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+      // 可以在这里添加错误上报逻辑
+    });
+    
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled Promise rejection:', event.reason);
+      // 可以在这里添加错误上报逻辑
+    });
+    
+    document.addEventListener('DOMContentLoaded',()=>{
+      // --- 增强的工具函数，添加参数验证和错误处理 ---
+      const startOfWeek=(d)=>{
+        try {
+          // 参数验证
+          const date = d instanceof Date ? d : new Date(d);
+          // 检查日期是否有效
+          if (isNaN(date.getTime())) {
+            console.warn('Invalid date provided to startOfWeek, using current date');
+            return startOfWeek(new Date());
+          }
+          const a = new Date(date); // 创建副本避免修改原始日期
+          const e = (a.getDay() + 6) % 7;
+          a.setDate(a.getDate() - e);
+          a.setHours(0, 0, 0, 0);
+          return a;
+        } catch (err) {
+          console.error('Error in startOfWeek:', err);
+          return new Date(); // 返回当前日期作为后备
+        }
+      };
+      
+      const weekKey=(a)=>{
+        try {
+          const startDate = startOfWeek(a);
+          return `kanban:${startDate.toISOString().slice(0,10)}`;
+        } catch (err) {
+          console.error('Error in weekKey:', err);
+          return `kanban:${startOfWeek(new Date()).toISOString().slice(0,10)}`;
+        }
+      };
+      
+      const fmtRange=(a)=>{
+        try {
+          const e = startOfWeek(a);
+          const t = new Date(e);
+          t.setDate(t.getDate() + 6);
+          return `${e.getMonth() + 1}/${e.getDate()} ~ ${t.getMonth() + 1}/${t.getDate()}`;
+        } catch (err) {
+          console.error('Error in fmtRange:', err);
+          return '日期范围错误';
+        }
+      };
+      
+      const escapeHtml=(a)=>{
+        try {
+          // 确保输入是字符串
+          const str = a === null || a === undefined ? '' : String(a);
+          return str.replace(/&/g, "&amp;")
+                   .replace(/</g, "&lt;")
+                   .replace(/>/g, "&gt;")
+                   .replace(/"/g, "&quot;")
+                   .replace(/'/g, "&#039;"); // 额外转义单引号
+        } catch (err) {
+          console.error('Error in escapeHtml:', err);
+          return '';
+        }
+      };
+      
+      const getWeekNumber=(d)=>{
+        try {
+          // 参数验证
+          const date = d instanceof Date ? d : new Date(d);
+          if (isNaN(date.getTime())) {
+            console.warn('Invalid date provided to getWeekNumber, using current date');
+            return getWeekNumber(new Date());
+          }
+          
+          const adjustedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+          adjustedDate.setUTCDate(adjustedDate.getUTCDate() + 4 - (adjustedDate.getUTCDay() || 7));
+          const yearStart = new Date(Date.UTC(adjustedDate.getUTCFullYear(), 0, 1));
+          return Math.ceil(((adjustedDate - yearStart) / 864e5 + 1) / 7);
+        } catch (err) {
+          console.error('Error in getWeekNumber:', err);
+          return 0;
+        }
+      };
+      let currentWeek=new Date,draggedEl=null;const columns=["planning","todo","doing","done"],board=document.getElementById("board");
+      const loadForWeek=()=>{
+          try {
+            const key=weekKey(currentWeek);
+            let data = null;
+            
+            // 安全地从localStorage获取数据
+            try {
+              const storedData=localStorage.getItem(key);
+              if (storedData) {
+                data=JSON.parse(storedData);
+                // 验证数据结构
+                if (!data || typeof data !== 'object') {
+                  console.warn('Invalid data structure in localStorage, using empty board');
+                  data={planning:[],todo:[],doing:[],done:[]};
+                }
+              } else {
+                data={planning:[],todo:[],doing:[],done:[]};
+              }
+            } catch (parseError) {
+              console.error('Error parsing data from localStorage:', parseError);
+              data={planning:[],todo:[],doing:[],done:[]};
+            }
+            
+            columns.forEach(col=>{
+              const listElement=document.getElementById(col+"List");
+              if (!listElement) {
+                console.warn(`List element for column ${col} not found`);
+                return;
+              }
+              
+              listElement.innerHTML="";
+              const tasksForColumn=(data[col]||[]).filter(Boolean); // 过滤掉null和undefined
+              
+              if(tasksForColumn.length===0){
+                listElement.innerHTML='<div class="empty-state"><div class="empty-state-icon">✨</div><div class="empty-state-text">还没有任务，点击下方添加吧！</div></div>';
+              }else{
+                // 按照存储顺序添加任务（最新的在前面）
+                tasksForColumn.forEach(taskData=>{
+                  try {
+                    const taskElement=renderTask(taskData);
+                    if (taskElement && taskElement.nodeType === 1) { // 确保是有效的DOM元素
+                      listElement.appendChild(taskElement);
+                    }
+                  } catch (taskError) {
+                    console.error(`Error rendering task in column ${col}:`, taskError);
+                  }
+                });
+              }
+            });
+            
+            // 更新UI元素，添加空值检查
+            const weekLabelEl=document.getElementById("weekLabel");
+            if (weekLabelEl) weekLabelEl.textContent=fmtRange(currentWeek);
+            
+            const weekNumberLabelEl=document.getElementById("weekNumberLabel");
+            if (weekNumberLabelEl) weekNumberLabelEl.textContent=`(第 ${getWeekNumber(currentWeek)} 周)`;
+            
+            // 确保这些函数存在再调用
+            if (typeof updateTaskCounts === 'function') updateTaskCounts();
+            if (typeof updateStats === 'function') updateStats();
+            if (typeof checkEmptyStates === 'function') checkEmptyStates();
+          } catch (err) {
+            console.error('Error loading week data:', err);
+            // 即使出错也尝试恢复基本功能
+            if (typeof updateTaskCounts === 'function') updateTaskCounts();
+          }
+        };
+      const saveForWeek=()=>{
+          try {
+            const key=weekKey(currentWeek);
+            const data={};
+            
+            columns.forEach(col=>{
+              const tasks=[];
+              try {
+                // 从上到下遍历DOM元素，保持视觉顺序
+                const taskElements=document.querySelectorAll(`#${col}List .task`);
+                taskElements.forEach(taskElement=>{
+                  try {
+                    const contentElement=taskElement.querySelector(".content");
+                    // 确保所有必要的元素都存在
+                    if (contentElement && taskElement.dataset.id) {
+                      tasks.push({
+                        id:taskElement.dataset.id,
+                        text:contentElement.innerText || '',
+                        created:taskElement.dataset.created || new Date().toISOString(),
+                        priority:taskElement.dataset.priority||'none',
+                        tags:taskElement.dataset.tags||'',
+                        note:taskElement.dataset.note||''
+                      });
+                    }
+                  } catch (taskError) {
+                    console.error(`Error saving task in column ${col}:`, taskError);
+                    // 跳过错误的任务，继续保存其他任务
+                  }
+                });
+              } catch (queryError) {
+                console.error(`Error querying tasks for column ${col}:`, queryError);
+              }
+              data[col]=tasks;
+            });
+            
+            // 安全地保存到localStorage
+            try {
+              const jsonString=JSON.stringify(data);
+              localStorage.setItem(key,jsonString);
+            } catch (storageError) {
+              console.error('Error saving data to localStorage:', storageError);
+              // 可以在这里添加额外的错误处理，比如显示警告
+              if (storageError instanceof DOMException && 
+                  (storageError.name === 'QuotaExceededError' || 
+                   storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+                console.warn('localStorage quota exceeded, consider clearing old data');
+              }
+            }
+            
+            // 确保这些函数存在再调用
+            if (typeof updateTaskCounts === 'function') updateTaskCounts();
+            if (typeof updateStats === 'function') updateStats();
+            if (typeof checkEmptyStates === 'function') checkEmptyStates();
+          } catch (err) {
+            console.error('Error saving week data:', err);
+          }
+        };
+      const renderTask=(taskData)=>{try {
+          // 验证输入参数
+          if (!taskData || typeof taskData !== 'object') {
+            console.error('Invalid task data provided to renderTask:', taskData);
+            return null;
+          }
+          
+          // 创建任务元素
+          const taskElement=document.createElement("div");
+          taskElement.className="task";
+          taskElement.setAttribute("draggable","true");
+          
+          // 设置数据属性，确保有默认值
+          taskElement.dataset.id=taskData.id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          taskElement.dataset.created=taskData.created || new Date().toISOString();
+          taskElement.dataset.priority=taskData.priority || 'none';
+          taskElement.dataset.tags=taskData.tags || '';
+          taskElement.dataset.note=taskData.note || '';
+          
+          // 设置优先级属性
+          if(taskData.priority && taskData.priority!=='none'){
+            taskElement.setAttribute('data-priority',taskData.priority);
+          }
+          
+          // 格式化创建时间
+          const createdAt=new Date(taskElement.dataset.created);
+          if (isNaN(createdAt.getTime())) {
+            console.warn('Invalid date in task data, using current date');
+            createdAt=new Date();
+          }
+          
+          // 构建优先级标签
+          let priorityBadge='';
+          if(taskData.priority && taskData.priority!=='none'){
+            // 验证优先级值的有效性
+            const validPriorities=['high', 'medium', 'low'];
+            if (validPriorities.includes(taskData.priority)) {
+              priorityBadge=`<span class="priority-badge ${taskData.priority}"></span>`;
+            } else {
+              console.warn(`Invalid priority value: ${taskData.priority}`);
+            }
+          }
+          
+          // 构建标签HTML
+          let tagsHtml='';
+          if(taskData.tags){
+            try {
+              const tagList=taskData.tags.split(',').filter(tag=>tag.trim());
+              if(tagList.length>0){
+                tagsHtml='<div class="task-tags">'+tagList.map(tag=>`<span class="tag">${escapeHtml(tag.trim())}</span>`).join('')+'</div>';
+              }
+            } catch (tagsError) {
+              console.error('Error processing tags:', tagsError);
+            }
+          }
+          
+          // 构建备注HTML
+          let noteHtml='';
+          if(taskData.note){
+            noteHtml=`<div class="task-note">📝 ${escapeHtml(taskData.note)}</div>`;
+          }
+          
+          // 获取时间戳显示设置
+          const showTimeToggle=document.getElementById('showTimestampToggle');
+          const showTime=showTimeToggle ? showTimeToggle.checked : true;
+          
+          // 设置HTML内容
+          taskElement.innerHTML=`
+            ${priorityBadge}
+            <div class="content">${escapeHtml(taskData.text || '')}</div>
+            ${tagsHtml}
+            ${noteHtml}
+            <div class="meta">
+              <span class="small timestamp" title="${createdAt.toLocaleString()}" style="display:${showTime?'inline':'none'}">创建于 ${createdAt.toLocaleDateString()}</span>
+              <button title="删除任务" class="del-btn">\u2715</button>
+            </div>
+          `;
+          
+          // 添加事件监听器，包含错误处理
+          try {
+            const contentElement=taskElement.querySelector(".content");
+            if (contentElement) {
+              contentElement.addEventListener("dblclick",(e)=>{
+                try {
+                  e.target.setAttribute("contenteditable","true");
+                  e.target.focus();
+                } catch (editError) {
+                  console.error('Error enabling task editing:', editError);
+                }
+              });
+              
+              contentElement.addEventListener("blur",(e)=>{
+                try {
+                  e.target.removeAttribute("contenteditable");
+                  if (typeof saveForWeek === 'function') {
+                    saveForWeek();
+                  }
+                } catch (saveError) {
+                  console.error('Error saving task after edit:', saveError);
+                }
+              });
+            }
+            
+            taskElement.addEventListener('contextmenu',(e)=>{
+              try {
+                e.preventDefault();
+                if (typeof showTaskContextMenu === 'function') {
+                  showTaskContextMenu(taskElement);
+                }
+              } catch (menuError) {
+                console.error('Error showing task context menu:', menuError);
+              }
+            });
+          } catch (eventError) {
+            console.error('Error setting up task event listeners:', eventError);
+          }
+          
+          return taskElement;
+        } catch (err) {
+          console.error('Error rendering task:', err);
+          return null;
+        }
+      };
+      const addTask=(columnName,taskText)=>{
+        try {
+          // 验证输入参数
+          if (!columnName || typeof columnName !== 'string') {
+            console.error('Invalid column name provided to addTask:', columnName);
+            return null;
+          }
+          
+          // 验证任务文本
+          const trimmedText=(taskText || '').trim();
+          if (!trimmedText) {
+            console.warn('Empty task text provided, not adding task');
+            return null;
+          }
+          
+          // 生成唯一ID
+          const taskId="t"+Date.now()+"_"+Math.random().toString(36).substr(2, 9);
+          
+          // 创建任务对象
+          const taskData={
+            id:taskId,
+            text:trimmedText,
+            created:new Date().toISOString(),
+            priority:'none',
+            tags:'',
+            note:''
+          };
+          
+          // 渲染任务元素
+          const taskElement=renderTask(taskData);
+          if (!taskElement) {
+            console.error('Failed to render new task');
+            return null;
+          }
+          
+          // 获取目标列表元素
+          const listElement=document.getElementById(columnName+"List");
+          if (!listElement) {
+            console.error(`List element not found for column: ${columnName}`);
+            return null;
+          }
+          
+          // 添加动画效果并追加到列表顶部
+          taskElement.classList.add('newly-added');
+          listElement.prepend(taskElement);
+          
+          // 保存数据
+          if (typeof saveForWeek === 'function') {
+            saveForWeek();
+          }
+          
+          // 更新空状态检查 - 确保添加任务后移除空状态显示
+          if(typeof checkEmptyStates === 'function') {
+            checkEmptyStates();
+          }
+          
+          // 移除动画类
+          setTimeout(()=>{
+            try {
+              if (taskElement && taskElement.classList) {
+                taskElement.classList.remove('newly-added');
+              }
+            } catch (timeoutError) {
+              console.error('Error removing animation class:', timeoutError);
+            }
+          },400);
+          
+          return taskElement;
+        } catch (err) {
+          console.error('Error adding new task:', err);
+          return null;
+        }
+      };
+      const startClock=()=>{const a=document.getElementById("liveClock");if(!a)return;const e=()=>{a.textContent=(new Date).toLocaleTimeString("zh-CN",{hour12:!1})};e(),setInterval(e,1e3)};
+      const updateCurrentDate=()=>{const dateEl=document.getElementById("currentDate");if(!dateEl)return;const now=new Date();const options={year:'numeric',month:'long',day:'numeric',weekday:'long'};dateEl.textContent=now.toLocaleDateString('zh-CN',options)};
+      const initEventListeners=()=>{
+        document.getElementById("prevWeek").addEventListener("click",()=>changeWeek(-1));
+        document.getElementById("nextWeek").addEventListener("click",()=>changeWeek(1));
+        document.getElementById("todayBtn").addEventListener("click",()=>{currentWeek=new Date;loadForWeek()});
+        document.getElementById("clearBtn").addEventListener("click",clearCurrentWeek);
+        
+        board.addEventListener("click",a=>{
+          if(a.target.matches("[data-add-to]")){
+            const e=a.target.getAttribute("data-add-to");
+            const t=document.getElementById("input-"+e);
+            if(t.value.trim()){
+              addTask(e,t.value.trim());
+              t.value="";
+              t.dispatchEvent(new Event("input"));
+            }
+          }
+        });
+        
+          board.addEventListener("click",a=>{
+          try {
+            if(a.target.matches(".del-btn")){
+              a.stopPropagation(); // 阻止事件冒泡
+              const taskElement=a.target.closest(".task");
+              
+              // 安全检查
+              if(!taskElement) {
+                console.warn("No task element found to delete");
+                return;
+              }
+              
+              // 确认删除
+              if(confirm("确定要删除该任务吗？")){
+                try {
+                  // 添加动画效果
+                  taskElement.style.transform="scale(0.8)";
+                  taskElement.style.opacity="0";
+                  taskElement.style.transition="transform 0.2s ease, opacity 0.2s ease";
+                  
+                  // 延迟删除并保存
+                  setTimeout(()=>{
+                    try {
+                      // 再次检查元素是否仍然存在
+                      if(document.body.contains(taskElement)) {
+                        taskElement.remove();
+                        // 安全地调用保存函数
+                        if(typeof saveForWeek === 'function') {
+                          saveForWeek();
+                        }
+                        // 更新空状态检查
+                        if(typeof checkEmptyStates === 'function') {
+                          checkEmptyStates();
+                        }
+                      }
+                    } catch (removeError) {
+                      console.error('Error removing task element:', removeError);
+                    }
+                  },200);
+                } catch (animationError) {
+                  console.error('Error applying delete animation:', animationError);
+                  // 即使动画出错也尝试删除任务
+                  if(document.body.contains(taskElement)) {
+                    taskElement.remove();
+                    if(typeof saveForWeek === 'function') {
+                      saveForWeek();
+                    }
+                  }
+                }
+              }
+            }
+          } catch (deleteError) {
+            console.error('Error in delete task handler:', deleteError);
+          }
+        });
+        
+        board.querySelectorAll('input[type="text"]').forEach(a=>{
+          a.addEventListener("input",()=>{
+            const e=a.id.replace("input-","");
+            const t=document.querySelector(`button[data-add-to="${e}"]`);
+            t.disabled=!a.value.trim();
+          });
+          a.addEventListener("keydown",e=>{
+            if("Enter"===e.key){
+              e.preventDefault();
+              const t=document.querySelector(`button[data-add-to="${a.id.replace("input-","")}"]`);
+              t.click();
+            }
+          });
+        });
+        
+        const a=document.createElement("div");
+        a.className="drop-indicator";
+        
+        board.addEventListener("dragstart",e=>{
+          if(e.target.matches(".task")){
+            draggedEl=e.target;
+            draggedEl.classList.add("dragging");
+            e.dataTransfer.effectAllowed="move";
+            e.dataTransfer.setData("text/plain",draggedEl.dataset.id);
+          }
+        });
+        
+        board.addEventListener("dragend",e=>{
+          if(draggedEl){
+            draggedEl.classList.remove("dragging");
+            draggedEl=null;
+            a.remove();
+            document.querySelectorAll(".col-list.drag-over").forEach(t=>t.classList.remove("drag-over"));
+            saveForWeek();
+            applySearchFilter();
+          }
+        });
+        
+        // 🔧 修复：拖拽时根据鼠标位置精确放置任务
+        board.addEventListener("dragover",e=>{
+          e.preventDefault();
+          const t=e.target.closest(".col-list");
+          if(t){
+            t.classList.add("drag-over");
+            const o=getDragAfterElement(t,e.clientY);
+            const tasks=t.querySelectorAll(".task:not(.dragging)");
+            
+            // 获取列表容器的位置信息
+            const listRect=t.getBoundingClientRect();
+            
+            // 根据鼠标位置和返回的元素决定放置位置
+            // 特别处理undefined情况：表示空列表且鼠标在上半部分，应放在顶部
+            if(o===undefined){
+              // 放在顶部
+              if(t.firstChild) {
+                t.insertBefore(a,t.firstChild);
+              } else {
+                t.appendChild(a);
+              }
+            } else if(o==null){
+              // 如果getDragAfterElement返回null且有任务，检查鼠标位置
+              if(tasks.length>0){
+                // 获取列表容器和最后一个任务的位置信息
+                const lastTask=tasks[tasks.length-1];
+                const lastTaskRect=lastTask.getBoundingClientRect();
+                const listCenter=listRect.top + listRect.height / 2;
+                
+                // 优化放置逻辑：只有在鼠标明确在底部区域才放在末尾
+                // 否则尝试放在合适的位置，避免总是放在开头或末尾
+                if(e.clientY > lastTaskRect.top + lastTaskRect.height * 0.9) {
+                  // 非常接近底部时才放在末尾
+                  t.appendChild(a);
+                } else if(e.clientY < listRect.top + listRect.height * 0.2) {
+                  // 接近顶部时放在开头
+                  t.insertBefore(a,tasks[0]);
+                } else {
+                  // 中间区域时，尝试找到最接近的位置
+                  let closestIndex=0;
+                  let minDistance=Math.abs(e.clientY - (tasks[0].getBoundingClientRect().top + tasks[0].getBoundingClientRect().height/2));
+                  
+                  for(let i=1;i<tasks.length;i++){
+                    const taskCenter=tasks[i].getBoundingClientRect().top + tasks[i].getBoundingClientRect().height/2;
+                    const distance=Math.abs(e.clientY - taskCenter);
+                    if(distance<minDistance){
+                      minDistance=distance;
+                      closestIndex=i;
+                    }
+                  }
+                  
+                  // 插入到最接近的任务之前
+                  t.insertBefore(a,tasks[closestIndex]);
+                }
+              }else{
+                // 列表为空时，根据鼠标位置决定放置在顶部还是底部
+                // 获取列表容器的垂直中心点
+                const listMiddle=listRect.top + listRect.height / 2;
+                
+                // 如果鼠标在列表上半部分，放在顶部
+                if(e.clientY < listMiddle) {
+                  // 使用insertBefore插入到第一个子元素前（等同于prepend）
+                  if(t.firstChild) {
+                    t.insertBefore(a,t.firstChild);
+                  } else {
+                    // 如果没有子元素，正常添加
+                    t.appendChild(a);
+                  }
+                } else {
+                  // 鼠标在下半部分，放在底部
+                  t.appendChild(a);
+                }
+              }
+            }else{
+              // 正常插入到指定元素之前
+              t.insertBefore(a,o);
+            }
+          }
+        });
+        
+        board.addEventListener("dragleave",e=>{
+          const t=e.target.closest(".col-list");
+          if(t)t.classList.remove("drag-over");
+        });
+        
+        board.addEventListener("drop",e=>{
+          e.preventDefault();
+          const t=e.target.closest(".col-list");
+          if(t&&draggedEl){
+            if(a.parentNode){
+              a.parentNode.insertBefore(draggedEl,a);
+            }else{
+              t.appendChild(draggedEl);
+            }
+          }
+        });
+        
+        const getDragAfterElement=(e,t)=>{
+          const o=[...e.querySelectorAll(".task:not(.dragging)")];
+          if(o.length===0){
+            // 空列表时，根据鼠标位置返回不同值
+            // 获取列表容器的位置信息
+            const listRect=e.getBoundingClientRect();
+            // 获取列表容器的垂直中心点
+            const listMiddle=listRect.top + listRect.height / 2;
+            
+            // 如果鼠标在上半部分，返回一个特殊标记（undefined）表示应该放在顶部
+            // 如果鼠标在下半部分，返回null表示放在底部
+            return t < listMiddle ? undefined : null;
+          }
+          
+          // 获取列表容器的位置信息
+          const listRect=e.getBoundingClientRect();
+          
+          // 如果鼠标位置在列表顶部区域（前15%高度），直接返回第一个元素
+          if(t < listRect.top + listRect.height * 0.15) {
+            return o[0];
+          }
+          
+          // 减小底部区域判定范围，从10%改为5%，减少意外放置在底部的情况
+          if(t > listRect.bottom - listRect.height * 0.05) {
+            return null;
+          }
+          
+          // 正常计算放置位置 - 更精确的任务间定位
+          for(let i=0;i<o.length;i++){
+            const elem=o[i];
+            const box=elem.getBoundingClientRect();
+            const offset=t-box.top-box.height/2;
+            if(offset<0)return elem;
+          }
+          
+          // 只有在鼠标非常接近底部时才默认放在末尾，否则尝试放在倒数第二个任务前
+          if(t > listRect.bottom - listRect.height * 0.2 && o.length > 1) {
+            return o[o.length - 1];
+          }
+          
+          return null;
+        };
+      };
+
+      const changeWeek=a=>{currentWeek.setDate(currentWeek.getDate()+a*7),loadForWeek()},clearCurrentWeek=()=>{confirm("确定要清空本周的所有任务吗？此操作不可恢复。")&&(localStorage.removeItem(weekKey(currentWeek)),loadForWeek())};
+      
+      // ✨ 优化的右键菜单 - 分步骤设置
+      const showTaskContextMenu = (taskEl) => {
+        try {
+          // 参数验证
+          if (!taskEl || !(taskEl instanceof HTMLElement) || !taskEl.classList.contains('task')) {
+            console.error('Invalid task element provided to showTaskContextMenu:', taskEl);
+            return;
+          }
+          
+          const menuOptions = [
+            '设置优先级',
+            '设置标签',
+            '添加备注',
+            '取消'
+          ];
+          
+          const choice = prompt(`请选择操作：
+1. ${menuOptions[0]}
+2. ${menuOptions[1]}
+3. ${menuOptions[2]}
+4. ${menuOptions[3]}
+
+请输入数字 1-4:`);
+          
+          if (!choice) return;
+          
+          // 验证输入格式
+          const trimmedChoice = choice.trim();
+          if (!/^[1-4]$/.test(trimmedChoice)) {
+            console.warn('Invalid menu choice:', trimmedChoice);
+            alert('请输入有效的数字 1-4');
+            return;
+          }
+          
+          switch(trimmedChoice) {
+            case '1':
+              if (typeof setPriority === 'function') setPriority(taskEl);
+              break;
+            case '2':
+              if (typeof setTags === 'function') setTags(taskEl);
+              break;
+            case '3':
+              if (typeof setNote === 'function') setNote(taskEl);
+              break;
+            default:
+              return;
+          }
+        } catch (menuError) {
+          console.error('Error in task context menu:', menuError);
+          // 静默失败，不影响用户体验
+        }
+      };
+      
+      const setPriority = (taskEl) => {
+        try {
+          // 参数验证
+          if (!taskEl || !(taskEl instanceof HTMLElement)) {
+            console.error('Invalid task element provided to setPriority:', taskEl);
+            return;
+          }
+          
+          const priority = prompt('设置优先级:\n- high (高)\n- medium (中)\n- low (低)\n- none (无)\n\n请输入:', taskEl.dataset.priority || 'none');
+          
+          // 如果用户点击取消
+          if (priority === null) return;
+          
+          // 验证优先级值
+          const trimmedPriority = priority.toLowerCase().trim();
+          const validPriorities = ['high', 'medium', 'low', 'none'];
+          
+          if (!validPriorities.includes(trimmedPriority)) {
+            console.warn('Invalid priority value:', trimmedPriority);
+            alert('请输入有效的优先级值：high、medium、low 或 none');
+            return;
+          }
+          
+          try {
+            // 更新数据属性
+            taskEl.dataset.priority = trimmedPriority;
+            
+            // 更新DOM属性
+            if (trimmedPriority !== 'none') {
+              taskEl.setAttribute('data-priority', trimmedPriority);
+            } else {
+              taskEl.removeAttribute('data-priority');
+            }
+            
+            // 更新UI显示
+            const badge = taskEl.querySelector('.priority-badge');
+            if (badge) {
+              badge.remove();
+            }
+            
+            if (trimmedPriority !== 'none') {
+              const newBadge = document.createElement('span');
+              newBadge.className = `priority-badge ${trimmedPriority}`;
+              
+              // 安全地插入元素
+              const firstChild = taskEl.firstChild;
+              if (firstChild) {
+                taskEl.insertBefore(newBadge, firstChild);
+              } else {
+                taskEl.appendChild(newBadge);
+              }
+            }
+            
+            // 保存更改
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          } catch (domError) {
+            console.error('Error updating priority DOM elements:', domError);
+            // 即使DOM更新失败，也尝试保存数据
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          }
+        } catch (error) {
+          console.error('Error setting task priority:', error);
+        }
+      };
+      
+      const setTags = (taskEl) => {
+        try {
+          // 参数验证
+          if (!taskEl || !(taskEl instanceof HTMLElement)) {
+            console.error('Invalid task element provided to setTags:', taskEl);
+            return;
+          }
+          
+          const tags = prompt('设置标签 (用逗号分隔多个标签):\n例: 工作,紧急,前端', taskEl.dataset.tags || '');
+          
+          // 如果用户点击取消
+          if (tags === null) return;
+          
+          try {
+            // 更新数据属性
+            taskEl.dataset.tags = tags;
+            
+            // 更新UI显示
+            const tagDiv = taskEl.querySelector('.task-tags');
+            if (tagDiv) {
+              tagDiv.remove();
+            }
+            
+            const trimmedTags = tags.trim();
+            if (trimmedTags) {
+              try {
+                const tagList = tags.split(',').filter(t => t.trim());
+                const newTagDiv = document.createElement('div');
+                newTagDiv.className = 'task-tags';
+                
+                // 安全地生成标签HTML
+                if (typeof escapeHtml === 'function') {
+                  newTagDiv.innerHTML = tagList.map(t => {
+                    const trimmedTag = t.trim();
+                    return `<span class="tag">${escapeHtml(trimmedTag)}</span>`;
+                  }).join('');
+                } else {
+                  console.warn('escapeHtml function not available, using basic tag creation');
+                  // 备选方案：逐个创建元素
+                  tagList.forEach(t => {
+                    const trimmedTag = t.trim();
+                    if (trimmedTag) {
+                      const tagSpan = document.createElement('span');
+                      tagSpan.className = 'tag';
+                      tagSpan.textContent = trimmedTag;
+                      newTagDiv.appendChild(tagSpan);
+                    }
+                  });
+                }
+                
+                // 安全地插入标签容器
+                const contentElement = taskEl.querySelector('.content');
+                if (contentElement && contentElement.parentNode === taskEl) {
+                  contentElement.after(newTagDiv);
+                } else {
+                  console.warn('Content element not found or not a direct child, appending tags to end');
+                  taskEl.appendChild(newTagDiv);
+                }
+              } catch (tagProcessingError) {
+                console.error('Error processing tags:', tagProcessingError);
+              }
+            }
+            
+            // 保存更改
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          } catch (domError) {
+            console.error('Error updating tags DOM elements:', domError);
+            // 即使DOM更新失败，也尝试保存数据
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          }
+        } catch (error) {
+          console.error('Error setting task tags:', error);
+        }
+      };
+      
+      const setNote = (taskEl) => {
+        try {
+          // 参数验证
+          if (!taskEl || !(taskEl instanceof HTMLElement)) {
+            console.error('Invalid task element provided to setNote:', taskEl);
+            return;
+          }
+          
+          const note = prompt('添加备注：', taskEl.dataset.note || '');
+          
+          // 如果用户点击取消
+          if (note === null) return;
+          
+          try {
+            // 更新数据属性
+            taskEl.dataset.note = note;
+            
+            // 更新UI显示
+            const noteDiv = taskEl.querySelector('.task-note');
+            if (noteDiv) {
+              noteDiv.remove();
+            }
+            
+            const trimmedNote = note.trim();
+            if (trimmedNote) {
+              const newNoteDiv = document.createElement('div');
+              newNoteDiv.className = 'task-note';
+              
+              // 安全地设置内容，避免XSS
+              newNoteDiv.textContent = `📝 ${trimmedNote}`;
+              
+              // 确定插入位置
+              const tagElement = taskEl.querySelector('.task-tags');
+              const contentElement = taskEl.querySelector('.content');
+              
+              if (tagElement && tagElement.parentNode === taskEl) {
+                tagElement.after(newNoteDiv);
+              } else if (contentElement && contentElement.parentNode === taskEl) {
+                contentElement.after(newNoteDiv);
+              } else {
+                console.warn('Cannot find appropriate position for note, appending to end');
+                taskEl.appendChild(newNoteDiv);
+              }
+            }
+            
+            // 保存更改
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          } catch (domError) {
+            console.error('Error updating note DOM elements:', domError);
+            // 即使DOM更新失败，也尝试保存数据
+            if (typeof saveForWeek === 'function') {
+              saveForWeek();
+            }
+          }
+        } catch (error) {
+          console.error('Error setting task note:', error);
+        }
+      };
+      
+      // ✨ === 新增功能：设置模态框逻辑 ===
+      const settingsModal = document.getElementById('settingsModal');
+      const openSettingsBtn = document.getElementById('settingsBtn');
+      const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+      openSettingsBtn.addEventListener('click', () => settingsModal.classList.add('visible'));
+      closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('visible'));
+      settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) { settingsModal.classList.remove('visible'); }
+      });
+      
+      // ✨ 深色模式切换
+      const themeToggle = document.getElementById('themeToggle');
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggle.checked = true;
+      }
+      themeToggle.addEventListener('change', () => {
+        if (themeToggle.checked) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+        }
+      });
+      
+      // ✨ 时间戳显示切换
+      document.getElementById('showTimestampToggle')?.addEventListener('change', (e) => {
+        const show = e.target.checked;
+        document.querySelectorAll('.task .timestamp').forEach(timestamp => {
+          timestamp.style.display = show ? 'inline' : 'none';
+        });
+        localStorage.setItem('showTimestamp', show ? 'true' : 'false');
+      });
+      
+      // 初始化时间戳显示设置
+      const savedShowTimestamp = localStorage.getItem('showTimestamp');
+      if (savedShowTimestamp === 'false') {
+        document.getElementById('showTimestampToggle').checked = false;
+      }
+
+      // ✨ 搜索功能 (优化版)
+      const searchInput = document.getElementById('searchInput');
+      const applySearchFilter = () => {
+        const query = searchInput.value.toLowerCase();
+        document.querySelectorAll('.task').forEach(task => {
+          if (!query) {
+            task.style.display = ''; // 清空搜索时显示所有
+            return;
+          }
+          const text = task.querySelector('.content').textContent.toLowerCase();
+          const tags = task.dataset.tags?.toLowerCase() || '';
+          const note = task.dataset.note?.toLowerCase() || '';
+          if (text.includes(query) || tags.includes(query) || note.includes(query)) {
+            task.style.display = '';
+          } else {
+            task.style.display = 'none';
+          }
+        });
+      };
+      
+      searchInput.addEventListener('input', applySearchFilter);
+
+      // ✨ 统计功能
+      const updateTaskCounts = () => {
+        columns.forEach(col => {
+          const count = document.querySelectorAll(`#${col}List .task`).length;
+          const countEl = document.getElementById(`count-${col}`);
+          if (countEl) countEl.textContent = count;
+        });
+      };
+
+      const updateStats = () => {
+        const counts = {};
+        let total = 0;
+        columns.forEach(col => {
+          const count = document.querySelectorAll(`#${col}List .task`).length;
+          counts[col] = count;
+          total += count;
+        });
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statPlanning').textContent = counts.planning || 0;
+        document.getElementById('statTodo').textContent = counts.todo || 0;
+        document.getElementById('statDoing').textContent = counts.doing || 0;
+        document.getElementById('statDone').textContent = counts.done || 0;
+        const progress = total > 0 ? Math.round((counts.done / total) * 100) : 0;
+        document.getElementById('statProgress').textContent = progress + '%';
+        document.getElementById('progressFill').style.width = progress + '%';
+        
+        // 更新用户卡片统计
+        document.getElementById('userWeekTotal').textContent = total;
+        document.getElementById('userWeekDone').textContent = counts.done || 0;
+      };
+
+      const statsBtn = document.getElementById('statsBtn');
+      const statsPanel = document.getElementById('statsPanel');
+      // 初始化统计面板为隐藏状态
+      statsBtn.addEventListener('click', () => {
+        if (statsPanel.style.display === 'none') {
+          statsPanel.style.display = 'grid';
+          statsBtn.textContent = '📈 隐藏统计';
+          updateStats();
+        } else {
+          statsPanel.style.display = 'none';
+          statsBtn.textContent = '📈 统计';
+        }
+      });
+      
+      // ✨ === 新增功能：数据导出逻辑 ===
+      const getCurrentWeekData = () => {
+          const key = weekKey(currentWeek);
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : {planning:[], todo:[], doing:[], done:[]};
+      };
+
+      const downloadFile = (filename, content, mimeType) => {
+          const blob = new Blob([content], { type: mimeType });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+      };
+
+      // 导出为 JSON
+      document.getElementById('exportJsonBtn').addEventListener('click', () => {
+          const data = getCurrentWeekData();
+          const jsonString = JSON.stringify(data, null, 2);
+          const weekStartDate = startOfWeek(currentWeek).toISOString().slice(0, 10);
+          downloadFile(`kanban-backup-${weekStartDate}.json`, jsonString, 'application/json');
+      });
+
+      // 导出为 CSV
+      document.getElementById('exportCsvBtn').addEventListener('click', () => {
+          const data = getCurrentWeekData();
+          const statusMap = { planning: '规划', todo: '待做', doing: '正在做', done: '完成' };
+          let csvContent = '\uFEFF'; // BOM for Excel to recognize UTF-8
+          csvContent += 'ID,内容,状态,创建日期,优先级,标签,备注\n';
+
+          columns.forEach(col => {
+              (data[col] || []).forEach(task => {
+                  const id = task.id;
+                  const text = `"${task.text.replace(/"/g, '""')}"`; // Handle quotes in text
+                  const status = statusMap[col];
+                  const created = new Date(task.created).toLocaleString('zh-CN');
+                  const priority = task.priority || 'none';
+                  const tags = task.tags || '';
+                  const note = `"${(task.note || '').replace(/"/g, '""')}"`;
+                  csvContent += [id, text, status, created, priority, tags, note].join(',') + '\n';
+              });
+          });
+          
+          const weekStartDate = startOfWeek(currentWeek).toISOString().slice(0, 10);
+          downloadFile(`kanban-export-${weekStartDate}.csv`, csvContent, 'text/csv;charset=utf-8;');
+      });
+
+      // ✨ 导出成就卡片为JPG图片（优化版）
+      document.getElementById('exportImageBtn').addEventListener('click', () => {
+        const data = getCurrentWeekData();
+        const counts = {};
+        let total = 0;
+        columns.forEach(col => {
+          counts[col] = (data[col] || []).length;
+          total += counts[col];
+        });
+        const progress = total > 0 ? Math.round((counts.done / total) * 100) : 0;
+        const userId = localStorage.getItem('userProfile_id') || '我的任务看板';
+        const userMotto = localStorage.getItem('userProfile_motto') || '今日事, 今日毕 🚀';
+        
+        // 创建高清 Canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;  // 提高分辨率
+        canvas.height = 1350; // 16:9 比例优化
+        const ctx = canvas.getContext('2d');
+        
+        // 启用高质量渲染
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // 渐变背景（更丰富的颜色）
+        const gradient = ctx.createLinearGradient(0, 0, 1080, 1350);
+        gradient.addColorStop(0, '#667eea');
+        gradient.addColorStop(0.5, '#764ba2');
+        gradient.addColorStop(1, '#f093fb');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1080, 1350);
+        
+        // 装饰圆形（增加设计感）
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.arc(150, 150, 200, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(930, 1200, 250, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // 白色卡片背景（圆角优化）
+        ctx.fillStyle = 'white';
+        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetY = 15;
+        // 绘制圆角矩形
+        const cardX = 60, cardY = 100, cardW = 960, cardH = 1150, cardRadius = 30;
+        ctx.beginPath();
+        ctx.moveTo(cardX + cardRadius, cardY);
+        ctx.lineTo(cardX + cardW - cardRadius, cardY);
+        ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + cardRadius);
+        ctx.lineTo(cardX + cardW, cardY + cardH - cardRadius);
+        ctx.quadraticCurveTo(cardX + cardW, cardY + cardH, cardX + cardW - cardRadius, cardY + cardH);
+        ctx.lineTo(cardX + cardRadius, cardY + cardH);
+        ctx.quadraticCurveTo(cardX, cardY + cardH, cardX, cardY + cardH - cardRadius);
+        ctx.lineTo(cardX, cardY + cardRadius);
+        ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        
+        // 顶部装饰条
+        const topBarGradient = ctx.createLinearGradient(60, 100, 1020, 100);
+        topBarGradient.addColorStop(0, '#667eea');
+        topBarGradient.addColorStop(1, '#764ba2');
+        ctx.fillStyle = topBarGradient;
+        ctx.beginPath();
+        ctx.moveTo(cardX + cardRadius, cardY);
+        ctx.lineTo(cardX + cardW - cardRadius, cardY);
+        ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + cardRadius);
+        ctx.lineTo(cardX + cardW, cardY + 120);
+        ctx.lineTo(cardX, cardY + 120);
+        ctx.lineTo(cardX, cardY + cardRadius);
+        ctx.quadraticCurveTo(cardX, cardY, cardX + cardRadius, cardY);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 标题（白色在紫色条上）
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 56px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎆 本周成就报告', 540, 185);
+        
+        // 用户信息区域
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 38px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`👤 ${userId}`, 120, 300);
+        
+        ctx.fillStyle = '#666';
+        ctx.font = 'italic 24px "Microsoft Yahei", sans-serif';
+        ctx.fillText(`"${userMotto}"`, 120, 350);
+        
+        // 日期和周数
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('zh-CN', {year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'});
+        const weekNum = getWeekNumber(now);
+        ctx.fillStyle = '#999';
+        ctx.font = '20px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(dateStr, 960, 300);
+        ctx.fillText(`第 ${weekNum} 周`, 960, 330);
+        
+        // 分隔线
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(120, 380);
+        ctx.lineTo(960, 380);
+        ctx.stroke();
+        
+        // 总任务数区域（带背景）
+        const statY = 520;
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.08)';
+        ctx.fillRect(120, 420, 840, 140);
+        
+        ctx.fillStyle = '#667eea';
+        ctx.font = 'bold 90px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(total.toString(), 540, statY);
+        
+        ctx.fillStyle = '#666';
+        ctx.font = '28px "Microsoft Yahei", sans-serif';
+        ctx.fillText('本周创建任务数', 540, statY + 50);
+        
+        // 完成度圆环（更精美）
+        const centerX = 540;
+        const centerY = 750;
+        const circleRadius = 120;
+        
+        // 背景圆
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#f0f0f0';
+        ctx.lineWidth = 24;
+        ctx.stroke();
+        
+        // 进度圆（渐变色）
+        ctx.beginPath();
+        const progressAngle = (progress / 100) * 2 * Math.PI;
+        ctx.arc(centerX, centerY, circleRadius, -0.5 * Math.PI, -0.5 * Math.PI + progressAngle);
+        const progressGradient = ctx.createLinearGradient(centerX - circleRadius, centerY, centerX + circleRadius, centerY);
+        progressGradient.addColorStop(0, '#20c997');
+        progressGradient.addColorStop(0.5, '#38d9a9');
+        progressGradient.addColorStop(1, '#51cf66');
+        ctx.strokeStyle = progressGradient;
+        ctx.lineWidth = 24;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // 完成度文字
+        ctx.fillStyle = '#667eea';
+        ctx.font = 'bold 64px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${progress}%`, centerX, centerY + 18);
+        
+        ctx.fillStyle = '#666';
+        ctx.font = '24px "Microsoft Yahei", sans-serif';
+        ctx.fillText('完成度', centerX, centerY + 55);
+        
+        // 详细统计（带背景卡片）
+        const detailY = 960;
+        const statItems = [
+          { label: '💡 规划', value: counts.planning, color: '#339af0', bg: 'rgba(51, 154, 240, 0.1)' },
+          { label: '📝 待做', value: counts.todo, color: '#845ef7', bg: 'rgba(132, 94, 247, 0.1)' },
+          { label: '⏳ 进行中', value: counts.doing, color: '#fd7e14', bg: 'rgba(253, 126, 20, 0.1)' },
+          { label: '✅ 完成', value: counts.done, color: '#20c997', bg: 'rgba(32, 201, 151, 0.1)' }
+        ];
+        
+        statItems.forEach((item, index) => {
+          const x = 180 + index * 210;
+          // 背景卡片
+          ctx.fillStyle = item.bg;
+          ctx.fillRect(x - 75, detailY - 60, 150, 120);
+          ctx.strokeStyle = item.color;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x - 75, detailY - 60, 150, 120);
+          
+          // 数字
+          ctx.fillStyle = item.color;
+          ctx.font = 'bold 42px "Microsoft Yahei", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(item.value.toString(), x, detailY);
+          
+          // 标签
+          ctx.fillStyle = '#666';
+          ctx.font = '20px "Microsoft Yahei", sans-serif';
+          ctx.fillText(item.label, x, detailY + 40);
+        });
+        
+        // 底部鼓励语（带背景）
+        let encouragement = '';
+        let encourageColor = '#667eea';
+        if (progress >= 80) {
+          encouragement = '🎉 棒极了！你是执行力大师！';
+          encourageColor = '#20c997';
+        } else if (progress >= 50) {
+          encouragement = '💪 加油！你已经完成一半了！';
+          encourageColor = '#fd7e14';
+        } else if (total > 0) {
+          encouragement = '🌟 继续努力，每一步都是进步！';
+          encourageColor = '#845ef7';
+        } else {
+          encouragement = '🚀 开始你的高效一周吧！';
+        }
+        
+        ctx.fillStyle = 'rgba(102, 126, 234, 0.1)';
+        ctx.fillRect(120, 1120, 840, 70);
+        
+        ctx.fillStyle = encourageColor;
+        ctx.font = 'bold 30px "Microsoft Yahei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(encouragement, 540, 1165);
+        
+        // 水印（更精致）
+        ctx.fillStyle = '#bbb';
+        ctx.font = '18px "Microsoft Yahei", sans-serif';
+        ctx.fillText('📊 周任务看板 - 让每一周都更高效', 540, 1230);
+        
+        // 转换为JPG并下载（提高质量）
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const weekStartDate = startOfWeek(currentWeek).toISOString().slice(0, 10);
+          const fileName = `我的成就-${userId}-${weekStartDate}.jpg`;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          alert('✨ 成就卡片已生成！\n文件名: ' + fileName + '\n快去分享你的进步吧！');
+        }, 'image/jpeg', 0.98); // 提高质量到98%
+      });
+
+      // ✨ 导入JSON - 增强版
+      document.getElementById('importJsonInput')?.addEventListener('change', (e) => {
+          try {
+              // 验证事件对象
+              if (!e || !e.target) {
+                  console.error('Invalid event object');
+                  return;
+              }
+              
+              const file = e.target.files[0];
+              if (!file) {
+                  console.warn('No file selected');
+                  return;
+              }
+              
+              // 验证文件类型
+              if (file.type && file.type !== 'application/json' && !file.name.endsWith('.json')) {
+                  alert('❌ 请选择有效的JSON文件');
+                  e.target.value = '';
+                  return;
+              }
+              
+              // 验证文件大小（限制为5MB）
+              const maxSize = 5 * 1024 * 1024; // 5MB
+              if (file.size > maxSize) {
+                  alert('❌ 文件过大，请选择小于5MB的JSON文件');
+                  e.target.value = '';
+                  return;
+              }
+              
+              const reader = new FileReader();
+              
+              // 添加错误处理
+              reader.onerror = () => {
+                  console.error('Error reading file');
+                  alert('❌ 读取文件失败，请重试');
+                  e.target.value = '';
+              };
+              
+              reader.onload = (event) => {
+                  try {
+                      // 验证事件目标和结果
+                      if (!event || !event.target || !event.target.result) {
+                          throw new Error('无法读取文件内容');
+                      }
+                      
+                      const result = event.target.result;
+                      if (typeof result !== 'string' || result.trim() === '') {
+                          throw new Error('文件内容为空或无效');
+                      }
+                      
+                      let data;
+                      try {
+                          data = JSON.parse(result);
+                      } catch (parseError) {
+                          throw new Error(`JSON格式错误: ${parseError.message}`);
+                      }
+                      
+                      // 严格验证数据结构
+                      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                          throw new Error('数据必须是对象格式');
+                      }
+                      
+                      // 详细验证每一列的任务数据
+                      let validTasksFound = false;
+                      for (const col of columns) {
+                          const columnData = data[col];
+                          // 允许列不存在或为空数组
+                          if (columnData !== undefined && !Array.isArray(columnData)) {
+                              throw new Error(`列 ${col} 的数据必须是数组格式`);
+                          }
+                          
+                          // 验证每个任务的结构
+                          if (Array.isArray(columnData)) {
+                              for (let i = 0; i < columnData.length; i++) {
+                                  const task = columnData[i];
+                                  if (!task || typeof task !== 'object') {
+                                      throw new Error(`列 ${col} 中的任务 #${i+1} 格式无效`);
+                                  }
+                                  // 至少需要id和text字段
+                                  if (!task.id || typeof task.text !== 'string' || task.text.trim() === '') {
+                                      throw new Error(`列 ${col} 中的任务 #${i+1} 缺少必要的id或text字段`);
+                                  }
+                                  validTasksFound = true;
+                              }
+                          }
+                      }
+                      
+                      // 计算任务总数
+                      const tasksCount = Object.values(data)
+                        .filter(tasks => Array.isArray(tasks))
+                        .reduce((sum, tasks) => sum + tasks.length, 0);
+                      
+                      if (tasksCount === 0 && !validTasksFound) {
+                          alert('⚠️ JSON文件中没有有效的任务数据，仍要导入吗？');
+                      }
+                      
+                      // 显示导入确认，包含任务数量信息
+                      if (confirm(`确定要导入 ${tasksCount} 个任务吗？\n这将覆盖当前周的所有任务。`)) {
+                          try {
+                              // 创建安全的副本，确保所有列都存在且为数组
+                              const safeData = {};
+                              columns.forEach(col => {
+                                  safeData[col] = Array.isArray(data[col]) ? data[col] : [];
+                              });
+                              
+                              // 检查localStorage空间
+                              try {
+                                  const testKey = 'import_test_key';
+                                  const jsonString = JSON.stringify(safeData);
+                                  localStorage.setItem(testKey, jsonString);
+                                  localStorage.removeItem(testKey);
+                              } catch(storageErr) {
+                                  throw new Error('存储空间不足，无法导入数据');
+                              }
+                              
+                              // 保存到localStorage
+                              localStorage.setItem(weekKey(currentWeek), JSON.stringify(safeData));
+                              
+                              // 重新加载数据
+                              if (typeof loadForWeek === 'function') {
+                                  loadForWeek();
+                              }
+                              
+                              // 清空所有输入框并重置按钮状态
+                              columns.forEach(col => {
+                                  const input = document.getElementById(`input-${col}`);
+                                  if (input) {
+                                      try {
+                                          input.value = '';
+                                          input.dispatchEvent(new Event('input', { bubbles: true }));
+                                      } catch (inputErr) {
+                                          console.warn('Error resetting input:', inputErr);
+                                      }
+                                  }
+                              });
+                              
+                              alert(`✅ 导入成功！共导入 ${tasksCount} 个任务。`);
+                          } catch (saveError) {
+                              console.error('Save error:', saveError);
+                              throw new Error(`保存数据失败: ${saveError.message}`);
+                          }
+                      }
+                  } catch (error) {
+                      console.error('Import processing error:', error);
+                      alert('❌ 导入失败：' + error.message);
+                  } finally {
+                      // 重置输入框
+                      try {
+                          e.target.value = '';
+                      } catch (resetErr) {
+                          console.warn('Error resetting file input:', resetErr);
+                      }
+                  }
+              };
+              
+              // 启动文件读取
+              try {
+                  reader.readAsText(file, 'UTF-8');
+              } catch (readError) {
+                  console.error('Error initiating file read:', readError);
+                  alert('❌ 读取文件失败：' + readError.message);
+                  e.target.value = '';
+              }
+          } catch (handlerError) {
+              console.error('File input handler error:', handlerError);
+              alert('❌ 处理文件时出错：' + handlerError.message);
+              if (e && e.target) {
+                  e.target.value = '';
+              }
+          }
+      });
+      
+      // ✨ 重置用户信息
+      document.getElementById('resetProfileBtn')?.addEventListener('click', () => {
+        if (confirm('确定要重置个人信息吗？')) {
+          localStorage.removeItem('userProfile_id');
+          localStorage.removeItem('userProfile_motto');
+          localStorage.removeItem('userProfile_avatar');
+          loadUserProfile();
+          alert('✅ 个人信息已重置！');
+        }
+      });
+      
+      // ✨ 清除头像
+      document.getElementById('clearAvatarBtn')?.addEventListener('click', () => {
+        if (confirm('确定要清除头像吗？')) {
+          localStorage.removeItem('userProfile_avatar');
+          document.getElementById('avatarImg').style.display = 'none';
+          document.getElementById('avatarInitial').style.display = 'block';
+          const userId = localStorage.getItem('userProfile_id') || '我的任务看板';
+          document.getElementById('avatarInitial').textContent = userId.charAt(0).toUpperCase();
+          alert('✅ 头像已清除！');
+        }
+      });
+
+
+      // === 初始化 ===
+      (function(){const a=weekKey(new Date);if(!localStorage.getItem(a)){const e={planning:[{id:"seed1",text:"写一份周计划",created:(new Date).toISOString()}],todo:[{id:"seed2",text:"学习新的CSS技巧",created:(new Date).toISOString()}],doing:[],done:[]};localStorage.setItem(a,JSON.stringify(e))}})();
+      
+      // ✨ === 用户个人信息管理 ===
+      const loadUserProfile = () => {
+        const userId = localStorage.getItem('userProfile_id') || '我的任务看板';
+        const userMotto = localStorage.getItem('userProfile_motto') || '今日事, 今日毕 🚀';
+        const userAvatar = localStorage.getItem('userProfile_avatar');
+        
+        document.getElementById('userIdDisplay').textContent = userId;
+        document.getElementById('userMotto').textContent = userMotto;
+        
+        // 加载头像
+        if (userAvatar) {
+          document.getElementById('avatarImg').src = userAvatar;
+          document.getElementById('avatarImg').style.display = 'block';
+          document.getElementById('avatarInitial').style.display = 'none';
+        } else {
+          // 显示首字母
+          const initial = userId.charAt(0).toUpperCase();
+          document.getElementById('avatarInitial').textContent = initial;
+        }
+      };
+      
+      // 编辑用户ID - 增强版
+      document.getElementById('editUserId')?.addEventListener('click', () => {
+        try {
+          const userIdDisplay = document.getElementById('userIdDisplay');
+          if (!userIdDisplay) {
+            console.error('userIdDisplay element not found');
+            alert('❌ 页面元素未找到，请刷新页面后重试');
+            return;
+          }
+          
+          const currentId = userIdDisplay.textContent;
+          const newId = prompt('请输入您的用户ID:', currentId);
+          
+          // 用户点击取消
+          if (newId === null) return;
+          
+          // 验证输入
+          if (!newId || newId.trim().length === 0) {
+            alert('❌ 用户ID不能为空');
+            return;
+          }
+          
+          const trimmedId = newId.trim();
+          
+          // 长度限制
+          if (trimmedId.length > 50) {
+            alert('❌ 用户ID不能超过50个字符');
+            return;
+          }
+          
+          try {
+            // 更新显示和存储
+            userIdDisplay.textContent = trimmedId;
+            localStorage.setItem('userProfile_id', trimmedId);
+            
+            // 更新头像首字母
+            const avatarInitial = document.getElementById('avatarInitial');
+            if (avatarInitial && !localStorage.getItem('userProfile_avatar')) {
+              avatarInitial.textContent = trimmedId.charAt(0).toUpperCase();
+            }
+            
+            console.log('User ID updated successfully');
+          } catch (storageError) {
+            console.error('Error saving user ID:', storageError);
+            alert('❌ 保存用户ID失败，请刷新页面后重试');
+            // 回滚显示
+            userIdDisplay.textContent = currentId;
+          }
+        } catch (error) {
+          console.error('Error in editUserId handler:', error);
+          alert('❌ 处理用户ID编辑时出错');
+        }
+      });
+      
+      // 编辑格言 - 增强版
+      document.getElementById('userMotto')?.addEventListener('click', () => {
+        try {
+          const userMottoElement = document.getElementById('userMotto');
+          if (!userMottoElement) {
+            console.error('userMotto element not found');
+            alert('❌ 页面元素未找到，请刷新页面后重试');
+            return;
+          }
+          
+          const currentMotto = userMottoElement.textContent;
+          const newMotto = prompt('请输入您的个人格言:', currentMotto);
+          
+          // 用户点击取消
+          if (newMotto === null) return;
+          
+          const trimmedMotto = newMotto.trim();
+          
+          // 长度限制
+          if (trimmedMotto.length > 200) {
+            alert('❌ 个人格言不能超过200个字符');
+            return;
+          }
+          
+          try {
+            // 更新显示和存储
+            userMottoElement.textContent = trimmedMotto || '今日事, 今日毕 🚀';
+            localStorage.setItem('userProfile_motto', trimmedMotto || '今日事, 今日毕 🚀');
+            
+            console.log('User motto updated successfully');
+          } catch (storageError) {
+            console.error('Error saving user motto:', storageError);
+            alert('❌ 保存个人格言失败，请刷新页面后重试');
+            // 回滚显示
+            userMottoElement.textContent = currentMotto;
+          }
+        } catch (error) {
+          console.error('Error in userMotto click handler:', error);
+          alert('❌ 处理个人格言编辑时出错');
+        }
+      });
+      
+      // 上传头像
+      document.getElementById('avatarUploadBtn').addEventListener('click', () => {
+        document.getElementById('avatarInput').click();
+      });
+      
+      document.getElementById('userAvatar').addEventListener('click', () => {
+        document.getElementById('avatarInput').click();
+      });
+      
+      document.getElementById('avatarInput')?.addEventListener('change', (e) => {
+        try {
+          // 验证事件对象
+          if (!e || !e.target) {
+            console.error('Invalid event object');
+            return;
+          }
+          
+          const file = e.target.files[0];
+          if (!file) {
+            console.warn('No file selected');
+            return;
+          }
+          
+          // 验证文件类型
+          const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+          const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+          
+          const isTypeValid = file.type && validTypes.includes(file.type);
+          const fileName = file.name.toLowerCase();
+          const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+          
+          if (!isTypeValid && !hasValidExtension) {
+            alert('❌ 请选择有效的图片文件\n支持的格式: JPG, PNG, GIF, WebP');
+            e.target.value = '';
+            return;
+          }
+          
+          // 检查文件大小 (限制 1.5MB 考虑Base64编码增大)
+          const maxSize = 1.5 * 1024 * 1024; // 1.5MB
+          if (file.size > maxSize) {
+            alert('❌ 图片大小不能超过1.5MB\n(Base64编码后约为2MB)');
+            e.target.value = '';
+            return;
+          }
+          
+          const reader = new FileReader();
+          
+          // 添加错误处理
+          reader.onerror = () => {
+            console.error('Error reading image file');
+            alert('❌ 读取图片失败，请重试');
+            e.target.value = '';
+          };
+          
+          reader.onload = (event) => {
+            try {
+              // 验证事件目标和结果
+              if (!event || !event.target || !event.target.result) {
+                throw new Error('无法读取图片内容');
+              }
+              
+              const avatarData = event.target.result;
+              
+              // 验证Base64字符串格式
+              if (typeof avatarData !== 'string' || !avatarData.startsWith('data:image/')) {
+                throw new Error('无效的图片数据格式');
+              }
+              
+              // 检查localStorage是否已满
+              const testKey = 'userProfile_avatar_test';
+              try {
+                localStorage.setItem(testKey, avatarData);
+                localStorage.removeItem(testKey);
+              } catch(storageErr) {
+                console.error('Storage error:', storageErr);
+                alert('❌ 存储空间不足，请选择更小的图片');
+                return;
+              }
+              
+              // 验证图片元素存在
+              const avatarImg = document.getElementById('avatarImg');
+              const avatarInitial = document.getElementById('avatarInitial');
+              
+              if (!avatarImg || !avatarInitial) {
+                throw new Error('页面元素未找到，请刷新页面后重试');
+              }
+              
+              // 创建图片对象进行二次验证
+              const img = new Image();
+              img.onload = () => {
+                try {
+                  // 可以在这里添加图片尺寸验证
+                  if (img.width < 50 || img.height < 50) {
+                    alert('⚠️ 图片尺寸过小，可能显示效果不佳');
+                  }
+                  
+                  // 更新UI和保存数据
+                  avatarImg.src = avatarData;
+                  avatarImg.style.display = 'block';
+                  avatarInitial.style.display = 'none';
+                  
+                  try {
+                    localStorage.setItem('userProfile_avatar', avatarData);
+                    alert('✅ 头像上传成功！');
+                  } catch (saveErr) {
+                    console.error('Error saving avatar to localStorage:', saveErr);
+                    alert('❌ 保存头像失败：存储空间不足');
+                    // 回滚UI变化
+                    avatarImg.style.display = 'none';
+                    const userId = localStorage.getItem('userProfile_id') || '我的任务看板';
+                    avatarInitial.textContent = userId.charAt(0).toUpperCase();
+                    avatarInitial.style.display = 'block';
+                  }
+                } catch (imgProcessError) {
+                  console.error('Image processing error:', imgProcessError);
+                  alert('❌ 处理图片时出错：' + imgProcessError.message);
+                }
+              };
+              
+              img.onerror = () => {
+                console.error('Invalid image data');
+                alert('❌ 无效的图片文件，请选择其他图片');
+              };
+              
+              // 加载图片进行验证
+              img.src = avatarData;
+            } catch (error) {
+              console.error('Avatar upload processing error:', error);
+              alert('❌ 头像上传失败：' + error.message);
+            } finally {
+              // 重置输入框
+              try {
+                e.target.value = '';
+              } catch (resetErr) {
+                console.warn('Error resetting file input:', resetErr);
+              }
+            }
+          };
+          
+          // 启动文件读取
+          try {
+            reader.readAsDataURL(file);
+          } catch (readError) {
+            console.error('Error initiating file read:', readError);
+            alert('❌ 读取图片失败：' + readError.message);
+            e.target.value = '';
+          }
+        } catch (handlerError) {
+          console.error('File input handler error:', handlerError);
+          alert('❌ 处理图片时出错：' + handlerError.message);
+          if (e && e.target) {
+            e.target.value = '';
+          }
+        }
+      });
+      
+      loadUserProfile();
+      initEventListeners();
+      loadForWeek();
+      startClock();
+      updateCurrentDate();
+      
+      // 空状态检查 - 优化版
+      const checkEmptyStates=()=>{
+        columns.forEach(col=>{
+          const list=document.getElementById(col+'List');
+          if(!list) return;
+          
+          const tasks=list.querySelectorAll('.task');
+          const emptyStateElem=list.querySelector('.empty-state');
+          const isEmpty=tasks.length===0;
+          
+          if(isEmpty){
+            // 列为空时，确保显示空状态
+            if(!emptyStateElem){
+              // 先保存所有非任务元素（如果有的话）
+              const nonTaskElements=[];
+              Array.from(list.children).forEach(child=>{
+                if(!child.classList.contains('task')){
+                  nonTaskElements.push(child);
+                }
+              });
+              
+              // 清空列表
+              list.innerHTML='';
+              
+              // 添加空状态元素
+              const emptyState=document.createElement('div');
+              emptyState.className='empty-state';
+              emptyState.innerHTML='<div class="empty-state-icon">✨</div><div class="empty-state-text">还没有任务，点击下方添加吧！</div>';
+              list.appendChild(emptyState);
+              
+              // 重新添加非任务元素
+              nonTaskElements.forEach(el=>list.appendChild(el));
+            }
+          }else{
+            // 列不为空时，移除空状态元素
+            if(emptyStateElem){
+              emptyStateElem.remove();
+            }
+          }
+        });
+      };
+      
+      // 快捷键支持
+      const showKeyboardHint=()=>{const hint=document.getElementById('keyboardHint');hint.classList.add('show');setTimeout(()=>hint.classList.remove('show'),2000)};
+      document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();showKeyboardHint();}if(e.ctrlKey&&e.key==='s'){e.preventDefault();document.getElementById('statsBtn').click();showKeyboardHint();}});
+      
+      // 每天凌晨更新日期
+      setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+          updateCurrentDate();
+        }
+      }, 60000);
+    });
+  </script>
+</body>
+</html>
