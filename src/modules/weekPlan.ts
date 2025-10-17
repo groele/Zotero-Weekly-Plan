@@ -787,57 +787,130 @@ export class WeekPlanManager {
     const board = this.panelDoc.getElementById("zoteroplan-board");
     if (!board) return;
 
-    // 为所有列添加拖放事件
-    this.columns.forEach(col => {
-      const listElement = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-      if (!listElement) return;
+    // 拖拽增强：使用放置指示器，精确定位插入点，修复空列表及顶部/底部判定
+    let draggedEl: Element | null = null;
+    const dropIndicator = this.panelDoc.createElement("div");
+    dropIndicator.className = "zoteroplan-drop-indicator";
 
-      listElement.addEventListener("dragover", (e: DragEvent) => {
-        e.preventDefault();
-        const draggable = this.panelDoc!.querySelector(".zoteroplan-task-dragging");
-        if (!draggable) return;
+    // 事件：dragstart/dragend 统一绑定在看板容器上
+    board.addEventListener("dragstart", (e: Event) => {
+      const target = (e.target as Element) || null;
+      if (!target || !target.classList.contains("zoteroplan-task")) return;
+      draggedEl = target;
+      (draggedEl as HTMLElement).classList.add("zoteroplan-task-dragging");
+      const dragEvent = e as DragEvent;
+      if (dragEvent.dataTransfer) {
+        dragEvent.dataTransfer.effectAllowed = "move";
+        dragEvent.dataTransfer.setData("text/plain", (draggedEl as HTMLElement).dataset.id || "");
+      }
+    });
 
-        const afterElement = this.getDragAfterElement(listElement, e.clientY);
+    board.addEventListener("dragend", () => {
+      if (draggedEl) {
+        (draggedEl as HTMLElement).classList.remove("zoteroplan-task-dragging");
+        draggedEl = null;
+      }
+      dropIndicator.remove();
+      // 清理列上的 drag-over 状态
+      this.columns.forEach((col) => {
+        const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+        listEl?.classList.remove("drag-over");
+      });
+      this.saveForWeek();
+      this.applySearchFilter();
+    });
 
-        if (afterElement) {
-          listElement.insertBefore(draggable, afterElement);
+    // 事件：dragover/leave/drop 统一挂到 board，通过 closest 识别目标列表
+    board.addEventListener("dragover", (e: DragEvent) => {
+      if (!draggedEl) return;
+      e.preventDefault();
+      const targetList = (e.target as Element)?.closest?.(
+        ".zoteroplan-col-list",
+      ) as Element | null;
+
+      // 清理所有列表的 drag-over
+      this.columns.forEach((col) => {
+        const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+        el?.classList.remove("drag-over");
+      });
+
+      if (!targetList) return;
+      targetList.classList.add("drag-over");
+
+      const after = this.getDragAfterElement(targetList, e.clientY);
+      if (after === undefined) {
+        if (targetList.firstChild) {
+          targetList.insertBefore(dropIndicator, targetList.firstChild);
         } else {
-          listElement.appendChild(draggable);
+          targetList.appendChild(dropIndicator);
         }
-      });
+      } else if (after === null) {
+        targetList.appendChild(dropIndicator);
+      } else {
+        targetList.insertBefore(dropIndicator, after as Element);
+      }
+    });
 
-      listElement.addEventListener("drop", (e: DragEvent) => {
-        e.preventDefault();
-        this.saveForWeek();
-      });
+    board.addEventListener("dragleave", (e: DragEvent) => {
+      const related = e.relatedTarget as Node | null;
+      // 当整体离开 board 或移出当前列表时，适度清理
+      if (!board.contains(related)) {
+        this.columns.forEach((col) => {
+          const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+          el?.classList.remove("drag-over");
+        });
+        dropIndicator.remove();
+      }
+    });
+
+    board.addEventListener("drop", (e: DragEvent) => {
+      if (!draggedEl) return;
+      e.preventDefault();
+      const targetList = (e.target as Element)?.closest?.(
+        ".zoteroplan-col-list",
+      ) as Element | null;
+      if (!targetList) return;
+      if (dropIndicator.parentNode === targetList) {
+        targetList.insertBefore(draggedEl, dropIndicator);
+      } else {
+        targetList.appendChild(draggedEl);
+      }
+      this.saveForWeek();
     });
   }
 
   /**
    * 获取拖拽元素应该放置在哪个元素之后
    */
-  private getDragAfterElement(container: Element, y: number): Element | null {
-    const draggableElements = container.querySelectorAll(".zoteroplan-task:not(.zoteroplan-task-dragging)");
-    const elements: Element[] = [];
-    draggableElements.forEach((el: Element) => elements.push(el as HTMLElement));
+  // 更智能的定位：
+  // - 返回元素: 在该元素前插入
+  // - 返回 undefined: 插入到列表顶部
+  // - 返回 null: 插入到列表底部
+  private getDragAfterElement(container: Element, y: number): Element | null | undefined {
+    const candidates: Element[] = Array.from(container.querySelectorAll(".zoteroplan-task:not(.zoteroplan-task-dragging)"));
+    const listRect = container.getBoundingClientRect();
 
-    if (elements.length === 0) {
-      return null;
+    if (candidates.length === 0) {
+      // 空列表：根据鼠标在上半/下半返回不同标记
+      const mid = listRect.top + listRect.height / 2;
+      return y < mid ? undefined : null;
     }
 
-    return elements.reduce<{ offset: number; element: Element | null }>(
-      (closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
+    // 顶部/底部缓冲区域，减少误触
+    const topBuffer = listRect.top + listRect.height * 0.15;
+    const bottomBuffer = listRect.bottom - listRect.height * 0.05;
+    if (y < topBuffer) return candidates[0];
+    if (y > bottomBuffer) return null;
 
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      },
-      { offset: Number.NEGATIVE_INFINITY, element: null }
-    ).element;
+    // 在任务间查找最近的插入点
+    for (let i = 0; i < candidates.length; i++) {
+      const box = (candidates[i] as HTMLElement).getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0) return candidates[i];
+    }
+
+    // 默认放在末尾
+    return null;
   }
 
   /**

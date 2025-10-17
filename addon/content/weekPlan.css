@@ -596,6 +596,14 @@
   overflow-y: auto;
 }
 
+/* 列在拖拽经过时的高亮反馈 */
+.zoteroplan-col-list.drag-over {
+  background: rgba(0, 123, 255, 0.06);
+  background: color-mix(in srgb, var(--wp-accent) 8%, transparent);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
 /* ==========================================================================
    任务卡片样式
    ========================================================================== */

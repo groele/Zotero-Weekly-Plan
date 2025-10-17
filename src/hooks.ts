@@ -205,14 +205,11 @@ function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): v
 
   const title = getString("week-plan-title");
   const icon = `chrome://${addon.data.config.addonRef}/content/icons/weekplan.svg`;
-  const dataUrl = "data:text/html,"
-    + encodeURIComponent(
-      "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style='margin:0'></body></html>"
-    );
+  const htmlUrl = `chrome://${addon.data.config.addonRef}/content/weekplan.html`;
 
   // 创建一个空白浏览器标签，然后注入我们的面板
   try {
-    Tabs.add({ id: tabId, type: "browser", title, icon, url: dataUrl, select: true });
+    Tabs.add({ id: tabId, type: "browser", title, icon, url: htmlUrl, select: true });
     (addon.data as any).weekPlanTabId = tabId;
 
     const inject = () => {
@@ -224,16 +221,10 @@ function openWeekPlanZoteroTab(win: Window, weekPlanManager: WeekPlanManager): v
           win.setTimeout(inject, 50);
           return;
         }
-        if (doc.body) {
-          doc.body.innerHTML = "";
-        }
+        const mount = doc.getElementById("app") || doc.body;
+        if (!mount) return;
         const panel = weekPlanManager.createPlanPanel(win);
-        if (doc.body) {
-          doc.body.style.margin = "0";
-          doc.body.appendChild(panel);
-        } else {
-          doc.documentElement?.appendChild(panel);
-        }
+        (mount as HTMLElement).appendChild(panel);
       } catch (e) {
         ztoolkit.log(e);
         win.setTimeout(inject, 50);
