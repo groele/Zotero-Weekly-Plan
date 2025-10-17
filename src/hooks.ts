@@ -280,7 +280,7 @@ function registerMainToolbarButton(win: Window): void {
   button.setAttribute("type", "button");
   button.setAttribute(
     "image",
-    `chrome://${addon.data.config.addonRef}/content/icons/weekplan.svg`,
+    `chrome://${addon.data.config.addonRef}/content/icons/weekplan-toolbar.svg`,
   );
   button.addEventListener("command", () => {
     const mgr: WeekPlanManager =

@@ -806,7 +806,7 @@ export class WeekPlanManager {
       if (!target || !target.classList.contains("zoteroplan-task")) return;
 
       draggedEl = target;
-      draggedEl.classList.add("zoteroplan-task-dragging");
+      draggedEl.classList.add("dragging");
 
       const dragEvent = e as DragEvent;
       if (dragEvent.dataTransfer) {
@@ -821,7 +821,7 @@ export class WeekPlanManager {
     // 事件：dragend - 清理拖拽状态
     board.addEventListener("dragend", () => {
       if (draggedEl) {
-        draggedEl.classList.remove("zoteroplan-task-dragging");
+        draggedEl.classList.remove("dragging");
         draggedEl = null;
       }
       dropIndicator.remove();
@@ -969,37 +969,46 @@ export class WeekPlanManager {
     // 获取所有非拖拽中的任务元素
     const candidates: Element[] = Array.from(
       container.querySelectorAll(
-        ".zoteroplan-task:not(.zoteroplan-task-dragging)",
+        ".zoteroplan-task:not(.dragging)",
       ),
     );
 
-    // 如果列表为空，返回 undefined 表示插入到顶部
+    // 空列表时，根据鼠标位置返回不同值
     if (candidates.length === 0) {
-      return undefined;
+      const listRect = container.getBoundingClientRect();
+      const listMiddle = listRect.top + listRect.height / 2;
+      // 鼠标在上半部分返回 undefined（顶部），下半部分返回 null（底部）
+      return y < listMiddle ? undefined : null;
     }
 
-    // 遍历所有候选元素，找到鼠标位置对应的插入点
-    let closestElement: Element | null = null;
-    let closestOffset = Number.NEGATIVE_INFINITY;
+    // 获取列表容器的位置信息
+    const listRect = container.getBoundingClientRect();
 
-    for (const candidate of candidates) {
-      const box = candidate.getBoundingClientRect();
-      // 计算鼠标相对于元素中心的偏移
+    // 如果鼠标位置在列表顶部区域（前15%高度），直接返回第一个元素
+    if (y < listRect.top + listRect.height * 0.15) {
+      return candidates[0];
+    }
+
+    // 减小底部区域判定范围，从10%改为5%，减少意外放置在底部的情况
+    if (y > listRect.bottom - listRect.height * 0.05) {
+      return null;
+    }
+
+    // 正常计算放置位置 - 更精确的任务间定位
+    for (let i = 0; i < candidates.length; i++) {
+      const elem = candidates[i] as HTMLElement;
+      const box = elem.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
-
-      // 如果鼠标在元素上半部分，且这是目前最接近的
-      if (offset < 0 && offset > closestOffset) {
-        closestOffset = offset;
-        closestElement = candidate;
+      if (offset < 0) {
+        return elem;
       }
     }
 
-    // 如果找到了元素，返回该元素（在它之前插入）
-    if (closestElement) {
-      return closestElement;
+    // 只有在鼠标非常接近底部时才默认放在末尾
+    if (y > listRect.bottom - listRect.height * 0.2 && candidates.length > 1) {
+      return candidates[candidates.length - 1];
     }
 
-    // 如果没有找到，说明应该插入到末尾
     return null;
   }
 

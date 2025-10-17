@@ -30,9 +30,11 @@
   --wp-priority-low: #51cf66;
 
   /* 间距 */
-  --wp-col-gap: 18px;
-  --wp-radius: 12px;
-  --wp-panel-padding: 18px;
+  --wp-col-gap: 16px;
+  --wp-radius: 10px;
+  --wp-radius-sm: 6px;
+  --wp-panel-padding: 16px;
+  --wp-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 深色模式 */
@@ -65,6 +67,8 @@
   height: 100%;
   overflow: auto;
   scroll-behavior: smooth;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -80,19 +84,19 @@
     ),
     var(--wp-card-bg);
   border-radius: var(--wp-radius);
-  padding: 24px;
+  padding: 20px 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
   border: 2px solid rgba(102, 126, 234, 0.15);
   transition: all 0.3s ease;
 }
 
 .zoteroplan-user-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.18);
   border-color: rgba(102, 126, 234, 0.3);
 }
 
@@ -101,11 +105,11 @@
 }
 
 .zoteroplan-user-avatar {
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--wp-accent);
+  border: 3px solid var(--wp-accent);
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -113,13 +117,13 @@
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .zoteroplan-user-avatar:hover {
-  transform: scale(1.08) rotate(5deg);
+  transform: scale(1.05) rotate(3deg);
   border-color: var(--wp-col-doing);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
@@ -158,10 +162,10 @@
 }
 
 .zoteroplan-user-id {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--wp-text-main);
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -183,11 +187,11 @@
 }
 
 .zoteroplan-user-motto {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--wp-text-muted);
   font-style: italic;
-  margin: 0 0 10px 0;
-  line-height: 1.6;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -207,8 +211,8 @@
 
 .zoteroplan-user-stats-mini {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 16px;
+  margin-top: 6px;
 }
 
 .zoteroplan-user-stat-item {
@@ -231,13 +235,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
+  background: var(--wp-card-bg);
+  padding: 16px 20px;
+  border-radius: var(--wp-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .zoteroplan-header h2 {
-  font-size: 28px;
+  font-size: 24px;
   margin: 0;
   color: var(--wp-text-main);
   font-weight: 700;
@@ -247,31 +255,35 @@
 .zoteroplan-header-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .zoteroplan-week-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .zoteroplan-current-date {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--wp-accent);
   font-weight: 600;
-  margin-right: 12px;
-  padding: 6px 12px;
+  margin-right: 8px;
+  padding: 5px 10px;
   background: rgba(0, 123, 255, 0.08);
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .zoteroplan-live-clock {
-  font-size: 17px;
+  font-size: 16px;
   color: var(--wp-text-main);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
 .zoteroplan-week-label {
@@ -291,25 +303,29 @@
 
 .zoteroplan-toolbar {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 10px;
+  align-items: stretch;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  background: var(--wp-card-bg);
+  padding: 12px 16px;
+  border-radius: var(--wp-radius);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .zoteroplan-search-bar {
   flex: 1;
   display: flex;
-  align-items: center;
-  min-width: 200px;
+  align-items: stretch;
+  min-width: 220px;
 }
 
 .zoteroplan-search-bar input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-radius: 8px;
-  border: 2px solid var(--wp-border-color);
-  background: var(--wp-card-bg);
+  border: 1.5px solid var(--wp-border-color);
+  background: var(--wp-bg);
   color: var(--wp-text-main);
   font-size: 14px;
   transition: all 0.2s ease;
@@ -318,8 +334,7 @@
 .zoteroplan-search-bar input:focus {
   outline: none;
   border-color: var(--wp-accent);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.12);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 /* ==========================================================================
@@ -327,15 +342,19 @@
    ========================================================================== */
 
 .zoteroplan-btn {
-  background: var(--wp-card-bg);
-  border: 1px solid var(--wp-border-color);
-  padding: 9px 14px;
+  background: var(--wp-bg);
+  border: 1.5px solid var(--wp-border-color);
+  padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   color: var(--wp-text-main);
   transition: all 0.2s ease;
   font-weight: 500;
   font-size: 14px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .zoteroplan-btn:hover {
@@ -423,17 +442,17 @@
 
 .zoteroplan-stats-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .zoteroplan-stat-card {
   background: var(--wp-card-bg);
-  padding: 16px;
+  padding: 14px;
   border-radius: 10px;
   text-align: center;
-  border: 2px solid var(--wp-border-color);
+  border: 1.5px solid var(--wp-border-color);
   transition: all 0.2s ease;
 }
 
@@ -444,10 +463,11 @@
 }
 
 .zoteroplan-stat-number {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--wp-accent);
   letter-spacing: -1px;
+  line-height: 1.2;
 }
 
 .zoteroplan-stat-label {
@@ -506,17 +526,20 @@
 .zoteroplan-board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--wp-col-gap);
+  gap: 16px;
   flex: 1;
-  overflow: auto;
+  overflow: visible;
+  margin-bottom: 20px;
 }
 
 .zoteroplan-column {
   background: var(--wp-card-bg);
-  padding: var(--wp-panel-padding);
+  padding: 16px;
   border-radius: var(--wp-radius);
-  min-height: 320px;
-  border-top: 4px solid;
+  min-height: 400px;
+  max-height: 600px;
+  border-top: 3px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -578,12 +601,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--wp-border-color);
 }
 
 .zoteroplan-col-title {
   font-weight: 700;
-  font-size: 1.15em;
+  font-size: 16px;
   letter-spacing: -0.3px;
   display: flex;
   align-items: center;
@@ -593,23 +618,27 @@
 .zoteroplan-task-count {
   background: var(--wp-accent);
   color: white;
-  padding: 3px 9px;
-  border-radius: 12px;
-  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 600;
-  min-width: 24px;
+  min-width: 22px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  line-height: 1.4;
 }
 
 /* 列表 */
 .zoteroplan-col-list {
   flex: 1;
-  min-height: 100px;
+  min-height: 150px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 2px;
+  margin: 0 -2px;
 }
 
 /* 列在拖拽经过时的高亮反馈 */
@@ -626,18 +655,18 @@
 
 .zoteroplan-task {
   background: var(--wp-card-bg);
-  padding: 14px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 8px;
   border: 1px solid var(--wp-border-color);
   cursor: grab;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .zoteroplan-task:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   border-color: var(--wp-accent);
 }
 
@@ -713,15 +742,18 @@
 
 /* 任务内容 */
 .zoteroplan-task-content {
-  padding: 4px;
+  padding: 2px 4px;
   outline: none;
   word-wrap: break-word;
   line-height: 1.5;
+  font-size: 14px;
 }
 
 .zoteroplan-task-content:focus {
-  outline: 2px solid var(--wp-accent);
+  outline: 1.5px solid var(--wp-accent);
+  outline-offset: 2px;
   border-radius: 4px;
+  background: rgba(0, 123, 255, 0.02);
 }
 
 /* 任务优先级 */
@@ -789,14 +821,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 11px;
   color: var(--wp-text-muted);
 }
 
 .zoteroplan-task-timestamp {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--wp-text-muted);
+  opacity: 0.8;
 }
 
 .zoteroplan-task-delete {
@@ -804,9 +839,10 @@
   border: none;
   color: var(--wp-text-muted);
   cursor: pointer;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1;
   transition: all 0.2s;
 }
 
@@ -820,11 +856,12 @@
    ========================================================================== */
 
 .zoteroplan-drop-indicator {
-  height: 50px;
-  background-color: rgba(0, 123, 255, 0.1);
+  height: 40px;
+  background-color: rgba(0, 123, 255, 0.08);
   border: 2px dashed var(--wp-accent);
-  border-radius: 8px;
-  margin: 5px 0;
+  border-radius: 6px;
+  margin: 4px 0;
+  transition: all 0.2s ease;
 }
 
 /* ==========================================================================
@@ -832,27 +869,28 @@
    ========================================================================== */
 
 .zoteroplan-add-row {
-  margin-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--wp-border-color);
   display: flex;
   gap: 6px;
 }
 
 .zoteroplan-add-row input {
   flex: 1;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 2px solid var(--wp-border-color);
-  background: var(--wp-card-bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1.5px solid var(--wp-border-color);
+  background: var(--wp-bg);
   color: var(--wp-text-main);
   transition: all 0.2s ease;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .zoteroplan-add-row input:focus {
   outline: none;
   border-color: var(--wp-accent);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.12);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .zoteroplan-add-row button {
@@ -869,19 +907,19 @@
 
 .zoteroplan-empty-state {
   text-align: center;
-  padding: 40px 20px;
+  padding: 30px 16px;
   color: var(--wp-text-muted);
 }
 
 .zoteroplan-empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.5;
+  font-size: 42px;
+  margin-bottom: 10px;
+  opacity: 0.4;
 }
 
 .zoteroplan-empty-state-text {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -979,19 +1017,34 @@
    响应式设计
    ========================================================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
   .zoteroplan-board {
     grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .zoteroplan-stats-panel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .zoteroplan-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .zoteroplan-board {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .zoteroplan-stats-panel {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-@media (max-width: 600px) {
-  .zoteroplan-board {
-    grid-template-columns: 1fr;
+  .zoteroplan-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .zoteroplan-header-info {
@@ -999,13 +1052,21 @@
     justify-content: space-between;
   }
 
-  .zoteroplan-stats-panel {
-    grid-template-columns: repeat(2, 1fr);
+  .zoteroplan-week-controls {
+    flex-wrap: wrap;
+  }
+
+  .zoteroplan-container {
+    padding: 12px;
   }
 
   .zoteroplan-user-card {
     flex-direction: column;
     text-align: center;
+  }
+
+  .zoteroplan-user-stats-mini {
+    justify-content: center;
   }
 
   .zoteroplan-user-avatar {
