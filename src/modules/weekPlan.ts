@@ -662,7 +662,67 @@ export class WeekPlanManager {
     content.className = "zoteroplan-task-content";
     content.textContent = taskData.text || "";
     content.contentEditable = "true";
+    content.setAttribute("spellcheck", "false"); // 禁用拼写检查
     content.addEventListener("blur", () => this.saveForWeek());
+
+    // 阻止内容编辑区域触发拖拽 - 关键修复！
+    content.addEventListener("mousedown", (e: Event) => {
+      e.stopPropagation(); // 阻止事件冒泡到任务元素
+    });
+
+    content.addEventListener("dragstart", (e: Event) => {
+      e.preventDefault(); // 阻止内容区域的拖拽
+      e.stopPropagation();
+    });
+
+    // 双击复制任务内容到剪贴板 - 新增功能！
+    content.addEventListener("dblclick", (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const text = content.textContent?.trim() || "";
+      if (!text) return;
+
+      try {
+        // 使用 Zotero 的剪贴板 API
+        const clipboardHelper = (Components.classes as any)[
+          "@mozilla.org/widget/clipboardhelper;1"
+        ].getService((Components.interfaces as any).nsIClipboardHelper);
+        clipboardHelper.copyString(text);
+
+        // 显示复制成功提示
+        this.showCopyFeedback(content, "已复制！");
+
+        // 选中全部文本
+        const selection = this.panelDoc!.defaultView?.getSelection();
+        const range = this.panelDoc!.createRange();
+        range.selectNodeContents(content);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+        ztoolkit.log("任务内容已复制:", text);
+      } catch (err) {
+        ztoolkit.log("复制失败:", err);
+        this.showCopyFeedback(content, "复制失败", true);
+      }
+    });
+
+    // Enter键保存并退出编辑，Shift+Enter换行
+    content.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        content.blur(); // 退出编辑模式，触发保存
+      }
+      // Esc键取消编辑
+      if (e.key === "Escape") {
+        e.preventDefault();
+        content.textContent = taskData.text || ""; // 恢复原内容
+        content.blur();
+      }
+    });
+
+    // 鼠标悬停时显示提示
+    content.title = "双击复制 | Enter保存 | Shift+Enter换行 | Esc取消";
 
     // 标签
     const tagsHtml = "";
@@ -1392,5 +1452,52 @@ export class WeekPlanManager {
     return Math.ceil(
       ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
     );
+  }
+
+  /**
+   * 显示复制反馈提示
+   */
+  private showCopyFeedback(
+    element: HTMLElement,
+    message: string,
+    isError: boolean = false,
+  ): void {
+    if (!this.panelDoc) return;
+
+    // 创建提示元素
+    const feedback = this.panelDoc.createElement("div");
+    feedback.className = "zoteroplan-copy-feedback";
+    feedback.textContent = message;
+    feedback.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: ${isError ? "#fa5252" : "#20c997"};
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+      animation: copyFeedbackPulse 0.6s ease-out;
+    `;
+
+    // 添加到任务元素
+    const taskElement = element.closest(".zoteroplan-task") as HTMLElement;
+    if (taskElement) {
+      // 确保父元素是 relative 定位
+      const originalPosition = taskElement.style.position;
+      taskElement.style.position = "relative";
+      taskElement.appendChild(feedback);
+
+      // 600ms 后移除
+      setTimeout(() => {
+        feedback.remove();
+        taskElement.style.position = originalPosition;
+      }, 600);
+    }
   }
 }

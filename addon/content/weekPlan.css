@@ -667,12 +667,20 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  user-select: none; /* 防止拖拽时选中文本 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .zoteroplan-task:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   border-color: var(--wp-accent);
+}
+
+.zoteroplan-task:active {
+  cursor: grabbing;
 }
 
 /* 任务按列着色 */
@@ -752,6 +760,17 @@
   word-wrap: break-word;
   line-height: 1.5;
   font-size: 14px;
+  cursor: text; /* 编辑区域显示文本光标 */
+  user-select: text; /* 允许选择文本 */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  transition: background 0.2s ease;
+}
+
+.zoteroplan-task-content:hover {
+  background: rgba(0, 123, 255, 0.02);
+  border-radius: 4px;
 }
 
 .zoteroplan-task-content:focus {
@@ -759,6 +778,26 @@
   outline-offset: 2px;
   border-radius: 4px;
   background: rgba(0, 123, 255, 0.02);
+}
+
+/* 复制反馈动画 */
+@keyframes copyFeedbackPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+.zoteroplan-copy-feedback {
+  animation: copyFeedbackPulse 0.6s ease-out;
 }
 
 /* 任务优先级 */
