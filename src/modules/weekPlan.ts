@@ -434,11 +434,11 @@ export class WeekPlanManager {
    * 创建单个列
    */
   private createColumn(doc: Document, colKey: string): Element {
-    const columnNames: { [key: string]: string } = {
-      planning: "规划",
-      todo: "待做",
-      doing: "正在做",
-      done: "完成",
+    const columnNames: { [key: string]: { zh: string; en: string } } = {
+      planning: { zh: "规划", en: "Planning" },
+      todo: { zh: "待做", en: "To Do" },
+      doing: { zh: "正在做", en: "Doing" },
+      done: { zh: "完成", en: "Done" },
     };
 
     const column = doc.createElement("div");
@@ -452,15 +452,23 @@ export class WeekPlanManager {
     const titleWrapper = doc.createElement("div");
     titleWrapper.className = "zoteroplan-col-title";
 
-    const title = doc.createElement("span");
-    title.textContent = columnNames[colKey];
+    // 左侧中文标题
+    const titleZh = doc.createElement("span");
+    titleZh.className = "zoteroplan-col-title-zh";
+    titleZh.textContent = columnNames[colKey].zh;
+
+    // 右侧英文标题
+    const titleEn = doc.createElement("span");
+    titleEn.className = "zoteroplan-col-title-en";
+    titleEn.textContent = columnNames[colKey].en;
 
     const count = doc.createElement("span");
     count.id = `zoteroplan-count-${colKey}`;
     count.className = "zoteroplan-task-count";
     count.textContent = "0";
 
-    titleWrapper.appendChild(title);
+    titleWrapper.appendChild(titleZh);
+    titleWrapper.appendChild(titleEn);
     titleWrapper.appendChild(count);
 
     header.appendChild(titleWrapper);
@@ -477,11 +485,11 @@ export class WeekPlanManager {
     const input = doc.createElement("input");
     input.id = `zoteroplan-input-${colKey}`;
     input.type = "text";
-    input.placeholder = `添加到${columnNames[colKey]}...`;
+    input.placeholder = `添加到${columnNames[colKey].zh}... / Add to ${columnNames[colKey].en}...`;
 
     const addBtn = doc.createElement("button");
     addBtn.className = "zoteroplan-btn";
-    addBtn.textContent = "添加";
+    addBtn.textContent = "添加 / Add";
     addBtn.setAttribute("data-add-to", colKey);
     addBtn.disabled = true;
     addBtn.addEventListener("click", () => {

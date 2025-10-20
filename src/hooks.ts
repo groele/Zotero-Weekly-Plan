@@ -253,6 +253,204 @@ function openWeekPlanZoteroTab(
 }
 
 /**
+ * 打开独立对话框窗口 - 支持全屏、最小化
+ */
+function openWeekPlanDialog(
+  win: Window,
+  weekPlanManager: WeekPlanManager,
+): void {
+  // 检查是否已存在窗口
+  const existingDialog = (addon.data as any).weekPlanDialog;
+  if (existingDialog && !existingDialog.closed) {
+    existingDialog.focus();
+    return;
+  }
+
+  const dialogFeatures = [
+    "chrome=yes",
+    "titlebar=yes",
+    "toolbar=no",
+    "menubar=no",
+    "location=no",
+    "resizable=yes",
+    "centerscreen=yes",
+    "width=1400",
+    "height=900",
+    "minimizable=yes",
+    "maximizable=yes",
+    "dialog=no", // 非模态对话框，可以全屏
+  ].join(",");
+
+  const dialogURL = `chrome://${addon.data.config.addonRef}/content/weekplan.html`;
+
+  try {
+    const dialog = win.openDialog(
+      dialogURL,
+      "zoteroplan-window",
+      dialogFeatures,
+    );
+
+    if (!dialog) {
+      ztoolkit.log("无法创建对话框");
+      return;
+    }
+
+    // 保存窗口引用
+    (addon.data as any).weekPlanDialog = dialog;
+
+    // 等待窗口加载完成
+    dialog.addEventListener("load", () => {
+      try {
+        const dialogDoc = dialog.document;
+        if (!dialogDoc) return;
+
+        // 设置窗口标题
+        dialogDoc.title = getString("week-plan-title");
+
+        // 注入面板
+        const mount = dialogDoc.getElementById("app") || dialogDoc.body;
+        if (mount) {
+          const panel = weekPlanManager.createPlanPanel(dialog);
+          (mount as HTMLElement).appendChild(panel);
+
+          // 添加窗口控制按钮
+          addWindowControls(dialogDoc, dialog);
+        }
+      } catch (e) {
+        ztoolkit.log("注入面板失败:", e);
+      }
+    });
+
+    // 窗口关闭时清理
+    dialog.addEventListener("unload", () => {
+      (addon.data as any).weekPlanDialog = null;
+      if (weekPlanManager) {
+        weekPlanManager.stopClock();
+      }
+    });
+  } catch (e) {
+    ztoolkit.log("打开对话框失败:", e);
+  }
+}
+
+/**
+ * 添加窗口控制按钮（全屏、最小化、关闭）
+ */
+function addWindowControls(doc: Document, win: Window): void {
+  const container = doc.getElementById("app") || doc.body;
+  if (!container) return;
+
+  const controlsBar = doc.createElement("div");
+  controlsBar.className = "zoteroplan-window-controls";
+  controlsBar.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+    display: flex;
+    gap: 8px;
+    background: var(--wp-card-bg);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: var(--wp-shadow-md);
+    border: 1px solid var(--wp-border-color);
+  `;
+
+  // 全屏按钮
+  const fullscreenBtn = createControlButton(
+    doc,
+    "⛶",
+    "全屏 / Fullscreen",
+    () => {
+      try {
+        if (!doc.fullscreenElement) {
+          doc.documentElement?.requestFullscreen();
+          fullscreenBtn.textContent = "❏";
+        } else {
+          doc.exitFullscreen();
+          fullscreenBtn.textContent = "⛶";
+        }
+      } catch (e) {
+        ztoolkit.log("全屏切换失败:", e);
+      }
+    },
+  );
+
+  // 最小化按钮
+  const minimizeBtn = createControlButton(
+    doc,
+    "─",
+    "最小化 / Minimize",
+    () => {
+      try {
+        win.minimize();
+      } catch (e) {
+        ztoolkit.log("最小化失败:", e);
+      }
+    },
+  );
+
+  // 关闭按钮
+  const closeBtn = createControlButton(
+    doc,
+    "×",
+    "关闭 / Close",
+    () => {
+      win.close();
+    },
+  );
+  closeBtn.style.color = "var(--wp-danger)";
+
+  controlsBar.appendChild(fullscreenBtn);
+  controlsBar.appendChild(minimizeBtn);
+  controlsBar.appendChild(closeBtn);
+
+  (container as HTMLElement).insertBefore(
+    controlsBar,
+    container.firstChild,
+  );
+}
+
+/**
+ * 创建控制按钮
+ */
+function createControlButton(
+  doc: Document,
+  text: string,
+  title: string,
+  onclick: () => void,
+): HTMLElement {
+  const btn = doc.createElement("button");
+  btn.textContent = text;
+  btn.title = title;
+  btn.style.cssText = `
+    background: transparent;
+    border: 1px solid var(--wp-border-color);
+    color: var(--wp-text-main);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms;
+  `;
+  btn.addEventListener("click", onclick);
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "var(--wp-info-light)";
+    btn.style.borderColor = "var(--wp-accent)";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "transparent";
+    btn.style.borderColor = "var(--wp-border-color)";
+  });
+  return btn;
+}
+
+/**
  * 在主窗口工具栏添加WeekPlan按钮
  */
 function registerMainToolbarButton(win: Window): void {
@@ -286,7 +484,8 @@ function registerMainToolbarButton(win: Window): void {
     const mgr: WeekPlanManager =
       (addon.data as any).weekPlanManager || new WeekPlanManager();
     (addon.data as any).weekPlanManager = mgr;
-    openWeekPlanZoteroTab(win, mgr);
+    // 使用独立窗口模式
+    openWeekPlanDialog(win, mgr);
   });
 
   toolbar.appendChild(button);
