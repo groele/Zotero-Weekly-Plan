@@ -1,5 +1,5 @@
-startup-begin = Zotero Plan started
-startup-finish = Zotero Plan initialized
+startup-begin = Zotero Weekly Plan started
+startup-finish = Zotero Weekly Plan initialized
 week-plan-title = Week Planning Board
 week-plan-menu = Week Plan
 week-plan-tab = Plan Board

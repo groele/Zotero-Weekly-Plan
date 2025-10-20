@@ -1,0 +1,92 @@
+📦 Zotero-Weekly-Plan-1.0
+│
+├── 📂 src/                                    TypeScript 源代码目录
+│   ├── 📂 modules/
+│   │   └── 📄 weekPlan.ts                     周计划核心业务逻辑
+│   ├── 📂 utils/
+│   │   ├── 📄 locale.ts                       国际化支持
+│   │   ├── 📄 prefs.ts                        偏好设置管理
+│   │   ├── 📄 window.ts                       窗口操作
+│   │   └── 📄 ztoolkit.ts                     Zotero 工具库
+│   ├── 📄 addon.ts                            插件主入口
+│   ├── 📄 hooks.ts                            生命周期钩子
+│   └── 📄 index.ts                            模块导出
+│
+├── 📂 addon/                                  插件资源文件
+│   ├── 📂 content/
+│   │   ├── 📂 icons/                          图标资源
+│   │   ├── 📄 weekplan.html                   HTML 模板
+│   │   ├── 📄 weekPlan.css                    响应式样式（已优化）
+│   │   └── 📄 zoteroPane.css                  面板样式
+│   ├── 📂 locale/
+│   │   ├── 📂 en-US/                          英文资源
+│   │   └── 📂 zh-CN/                          中文资源
+│   ├── 📄 bootstrap.js                        引导程序
+│   ├── 📄 manifest.json                       插件清单
+│   └── 📄 prefs.js                            默认偏好
+│
+├── 📂 typings/                                TypeScript 类型定义
+│   ├── 📄 global.d.ts                         全局类型
+│   ├── 📄 i10n.d.ts                           国际化类型
+│   └── 📄 prefs.d.ts                          偏好类型
+│
+├── 📂 test/                                   测试代码
+│   ├── 📄 startup.test.ts                     启动测试
+│   └── 📄 tsconfig.json                       测试配置
+│
+├── 📂 docs/                                   📚 项目文档（已整理）
+│   ├── 📄 README.md                           📑 文档索引
+│   ├── 📄 README-zhCN.md                      🇨🇳 中文用户手册
+│   ├── 📄 README-frFR.md                      🇫🇷 法语用户手册
+│   ├── 📄 UI_OPTIMIZATION_COMPLETE.md         ⭐ UI优化完成报告
+│   ├── 📄 QUICK_REFERENCE.md                  🔖 快速参考卡
+│   ├── 📄 UI_OPTIMIZATION_SUMMARY.md          📊 详细技术说明
+│   ├── 📄 UI_TEST_GUIDE.md                    🧪 测试指南
+│   └── 📄 UI_BEFORE_AFTER_COMPARISON.md       📈 优化前后对比
+│
+├── 📂 .vscode/                                VSCode 编辑器配置
+├── 📂 .npm-cache/                             npm 本地缓存
+│
+├── 📄 README.md                               📖 主文档（已更新）
+├── 📄 ARCHITECTURE.md                         🏗️  架构说明（新增）
+├── 📄 PROJECT_CLEANUP_SUMMARY.md              📋 整理总结（新增）
+├── 📄 LICENSE                                 ⚖️  开源许可证
+├── 📄 package.json                            📦 项目配置
+├── 📄 package-lock.json                       🔒 依赖锁定
+├── 📄 tsconfig.json                           ⚙️  TypeScript 配置
+├── 📄 zotero-plugin.config.ts                 🔧 插件构建配置
+├── 📄 eslint.config.mjs                       ✅ ESLint 配置
+├── 📄 .prettierignore                         💅 格式化忽略
+├── 📄 .gitignore                              🚫 Git 忽略
+├── 📄 .gitattributes                          🎯 Git 属性
+├── 📄 .npmrc                                  📦 npm 配置
+└── 📄 .env.example                            🔐 环境变量示例
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 项目统计
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+总文件数:     ~65 个文件
+源代码:       ~15 个 .ts 文件
+样式文件:     2 个 .css 文件
+文档:         12 个 .md 文件（8个在docs/，4个在根目录）
+配置文件:     10 个
+构建产物:     .scaffold/build/ (XPI)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 快速导航
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+新用户:       README.md → docs/README-zhCN.md
+开发者:       ARCHITECTURE.md → docs/QUICK_REFERENCE.md
+UI优化:       docs/UI_OPTIMIZATION_COMPLETE.md
+架构:         ARCHITECTURE.md
+整理说明:     PROJECT_CLEANUP_SUMMARY.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 项目已规范化整理
+最后更新: 2025-10-20
+构建状态: ✅ 通过 (0.181s)

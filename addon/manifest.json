@@ -3,7 +3,7 @@
   "name": "Zotero Weekly Plan",
   "version": "1.0.0",
   "description": "A week planning board for Zotero",
-  "homepage_url": "https://github.com/windingwind/zotero-plugin-template#readme",
+  "homepage_url": "https://github.com/groele/Zotero-Weekly-Plan#readme",
   "author": "Seking",
   "icons": {
     "16": "content/icons/icon.svg",
@@ -14,7 +14,7 @@
   "applications": {
     "zotero": {
       "id": "zotero-plan@zotero.org",
-      "update_url": "https://github.com/windingwind/zotero-plugin-template/releases/download/release/update.json",
+      "update_url": "https://github.com/groele/Zotero-Weekly-Plan/releases/download/release/update.json",
       "strict_min_version": "6.0",
       "strict_max_version": "7.*"
     }

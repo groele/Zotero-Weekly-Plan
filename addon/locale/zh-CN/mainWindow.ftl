@@ -1,6 +1,6 @@
 # 主窗口
-startup-begin = Zotero Plan 已启动
-startup-finish = Zotero Plan 初始化完成
+startup-begin = Zotero Weekly Plan 已启动
+startup-finish = Zotero Weekly Plan 初始化完成
 week-plan-title = 周计划看板
 week-plan-menu = 周计划
 week-plan-tab = 计划板

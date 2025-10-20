@@ -1,52 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <style>
-    /* 亮色主题 */
-    @media (prefers-color-scheme: light) {
-      .board-bg { fill: #667eea; }
-      .card { fill: #ffffff; stroke: #e0e0e0; }
-      .accent { fill: #4dabf7; }
-      .badge { fill: #339af0; }
-      .text { fill: #ffffff; }
-    }
-    
-    /* 暗色主题 */
-    @media (prefers-color-scheme: dark) {
-      .board-bg { fill: #5b68d1; }
-      .card { fill: #3a3a3a; stroke: #555555; }
-      .accent { fill: #3a92d3; }
-      .badge { fill: #2d7ab8; }
-      .text { fill: #ffffff; }
-    }
-    
-    /* 支持 context-stroke */
-    .contextual { stroke: context-stroke; }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <defs>
+    <style>
+      /* 亮色主题 */
+      @media (prefers-color-scheme: light) {
+        .board-bg { fill: #667eea; }
+        .card { fill: #ffffff; stroke: #e0e0e0; }
+        .accent { fill: #4dabf7; }
+        .badge { fill: #339af0; }
+        .text { fill: #ffffff; }
+      }
+      
+      /* 暗色主题 */
+      @media (prefers-color-scheme: dark) {
+        .board-bg { fill: #5b68d1; }
+        .card { fill: #3a3a3a; stroke: #555555; }
+        .accent { fill: #3a92d3; }
+        .badge { fill: #2d7ab8; }
+        .text { fill: #ffffff; }
+      }
+      
+      /* Firefox context-fill 支持 */
+      .contextual { 
+        fill: context-fill;
+        stroke: context-stroke; 
+      }
+    </style>
+  </defs>
   
-  <!-- 背景 -->
-  <rect x="2" y="2" width="28" height="28" rx="6" class="board-bg"/>
+  <!-- 背景 - 圆角矩形 -->
+  <rect x="1" y="1" width="14" height="14" rx="3" class="board-bg"/>
   
   <!-- 三列看板 -->
-  <g transform="translate(16, 16)">
+  <g transform="translate(8, 8)">
     <!-- 左列 -->
-    <rect x="-8" y="-6" width="4" height="10" rx="1" class="card" stroke-width="0.5"/>
-    <rect x="-7" y="-4" width="2" height="1" rx="0.3" class="accent"/>
-    <rect x="-7" y="-2" width="2" height="1" rx="0.3" class="accent" opacity="0.6"/>
+    <rect x="-4" y="-3" width="2" height="5" rx="0.5" class="card" stroke-width="0.3"/>
+    <rect x="-3.5" y="-2" width="1" height="0.5" rx="0.2" class="accent"/>
+    <rect x="-3.5" y="-1" width="1" height="0.5" rx="0.2" class="accent" opacity="0.6"/>
     
     <!-- 中列 -->
-    <rect x="-2" y="-6" width="4" height="10" rx="1" class="card" stroke-width="0.5"/>
-    <rect x="-1" y="-4" width="2" height="1" rx="0.3" class="accent"/>
-    <rect x="-1" y="-2" width="2" height="1" rx="0.3" class="accent" opacity="0.6"/>
+    <rect x="-1" y="-3" width="2" height="5" rx="0.5" class="card" stroke-width="0.3"/>
+    <rect x="-0.5" y="-2" width="1" height="0.5" rx="0.2" class="accent"/>
+    <rect x="-0.5" y="-1" width="1" height="0.5" rx="0.2" class="accent" opacity="0.6"/>
     
     <!-- 右列 -->
-    <rect x="4" y="-6" width="4" height="10" rx="1" class="card" stroke-width="0.5"/>
-    <rect x="5" y="-4" width="2" height="1" rx="0.3" class="accent"/>
-    <rect x="5" y="-2" width="2" height="1" rx="0.3" class="accent" opacity="0.6"/>
-    <rect x="5" y="0" width="2" height="1" rx="0.3" class="accent" opacity="0.4"/>
+    <rect x="2" y="-3" width="2" height="5" rx="0.5" class="card" stroke-width="0.3"/>
+    <rect x="2.5" y="-2" width="1" height="0.5" rx="0.2" class="accent"/>
+    <rect x="2.5" y="-1" width="1" height="0.5" rx="0.2" class="accent" opacity="0.6"/>
+    <rect x="2.5" y="0" width="1" height="0.5" rx="0.2" class="accent" opacity="0.4"/>
   </g>
   
   <!-- 顶部徽章 - "周" -->
-  <g transform="translate(24, 8)">
-    <circle cx="0" cy="0" r="4" class="badge"/>
-    <text x="0" y="0.5" font-family="Arial, sans-serif" font-size="5" font-weight="bold" class="text" text-anchor="middle" dominant-baseline="middle">周</text>
+  <g transform="translate(12, 4)">
+    <circle cx="0" cy="0" r="2" class="badge"/>
+    <text x="0" y="0.3" font-family="Arial, Microsoft YaHei, sans-serif" font-size="2.5" font-weight="bold" class="text" text-anchor="middle" dominant-baseline="middle">周</text>
   </g>
 </svg>

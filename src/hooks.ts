@@ -66,12 +66,12 @@ async function onMainWindowLoad(win: Window): Promise<void> {
  * 注册周计划面板
  */
 function registerWeekPlanPanel(win: Window): void {
-  const doc = win.document;
   const weekPlanManager = new WeekPlanManager();
   // 缓存实例供其他入口复用
   (addon.data as any).weekPlanManager = weekPlanManager;
 
-  // 添加到Zotero工具栏
+  // 添加到 Zotero 工具菜单
+  const doc = win.document;
   const toolsMenu = doc.getElementById("menu_Tools");
   if (toolsMenu) {
     const menuSeparator = doc.createElement("menuseparator");
@@ -82,123 +82,87 @@ function registerWeekPlanPanel(win: Window): void {
     weekPlanMenuItem.setAttribute("label", getString("week-plan-menu"));
     weekPlanMenuItem.setAttribute("accesskey", "P");
     weekPlanMenuItem.addEventListener("command", () => {
-      openWeekPlanZoteroTab(win, weekPlanManager);
+      openWeekPlanInTab(win, weekPlanManager);
     });
     toolsMenu.appendChild(weekPlanMenuItem);
   }
-
-  // 添加到Zotero右侧面板
-  const tabbox = doc.getElementById("zotero-item-pane-tabbox");
-  if (tabbox) {
-    const tabs = doc.getElementById("zotero-item-pane-tabs");
-    const tabpanels = doc.getElementById("zotero-item-pane-tabpanels");
-
-    if (tabs && tabpanels) {
-      // 创建标签页
-      const tab = doc.createElement("tab");
-      tab.id = "zoteroplan-tab";
-      tab.setAttribute("label", getString("week-plan-tab"));
-      tabs.appendChild(tab);
-
-      // 创建标签面板
-      const tabpanel = doc.createElement("tabpanel");
-      tabpanel.id = "zoteroplan-tabpanel";
-      tabpanel.appendChild(weekPlanManager.createPlanPanel(win));
-      tabpanels.appendChild(tabpanel);
-    }
-  }
-}
-
-
-
-/**
- * 打开周计划窗口 - 统一使用独立对话框
- */
-function openWeekPlanZoteroTab(
-  win: Window,
-  weekPlanManager: WeekPlanManager,
-): void {
-  // 直接使用独立对话框窗口，避免窗口控制重复问题
-  openWeekPlanDialog(win, weekPlanManager);
 }
 
 /**
- * 打开独立对话框窗口 - 支持全屏、最小化
+ * 在独立窗口中打开周计划
+ * 使用 Zotero 对话框系统
  */
-function openWeekPlanDialog(
+function openWeekPlanInTab(
   win: Window,
   weekPlanManager: WeekPlanManager,
 ): void {
-  // 检查是否已存在窗口
-  const existingDialog = (addon.data as any).weekPlanDialog;
-  if (existingDialog && !existingDialog.closed) {
-    existingDialog.focus();
-    return;
-  }
-
-  const dialogFeatures = [
-    "chrome=yes",
-    "titlebar=yes",
-    "toolbar=no",
-    "menubar=no",
-    "location=no",
-    "resizable=yes",
-    "centerscreen=yes",
-    "width=1400",
-    "height=900",
-    "minimizable=yes",
-    "maximizable=yes",
-    "dialog=no", // 非模态对话框，可以全屏
-  ].join(",");
-
-  const dialogURL = `chrome://${addon.data.config.addonRef}/content/weekplan.html`;
-
   try {
-    const dialog = win.openDialog(
-      dialogURL,
-      "zoteroplan-window",
-      dialogFeatures,
-    );
+    // 检查是否已经打开
+    if ((addon.data as any).weekPlanDialog) {
+      (addon.data as any).weekPlanDialog.focus();
+      return;
+    }
 
-    if (!dialog) {
-      ztoolkit.log("无法创建对话框");
+    // 创建对话框窗口
+    const dialogData: { [key: string]: any } = {
+      weekPlanManager,
+      loadCallback: () => {
+        ztoolkit.log("周计划窗口加载完成");
+      },
+    };
+
+    const dialogWindow = win.openDialog(
+      `chrome://${addon.data.config.addonRef}/content/weekplan.html`,
+      `${addon.data.config.addonRef}-weekplan-window`,
+      // 独立窗口：可最小化/最大化/可拖出主应用，带标题栏
+      // 说明：alwaysRaised 在部分平台可实现置顶；后续也提供运行时置顶切换
+      `chrome,dialog=no,titlebar,centerscreen,resizable,minimizable,maximizable,width=1200,height=800`,
+      dialogData,
+    ) as Window | null;
+
+    if (!dialogWindow) {
+      ztoolkit.log("无法创建对话框窗口");
       return;
     }
 
     // 保存窗口引用
-    (addon.data as any).weekPlanDialog = dialog;
+    (addon.data as any).weekPlanDialog = dialogWindow;
 
-    // 等待窗口加载完成
-    dialog.addEventListener("load", () => {
-      try {
-        const dialogDoc = dialog.document;
-        if (!dialogDoc) return;
-
-        // 设置窗口标题
-        dialogDoc.title = getString("week-plan-title");
-
-        // 注入面板
-        const mount = dialogDoc.getElementById("app") || dialogDoc.body;
-        if (mount) {
-          const panel = weekPlanManager.createPlanPanel(dialog);
-          (mount as HTMLElement).appendChild(panel);
-
-          // 不添加自定义窗口控制按钮，使用系统原生的窗口控制
-        }
-      } catch (e) {
-        ztoolkit.log("注入面板失败:", e);
-      }
+    // 监听窗口关闭
+    dialogWindow.addEventListener("unload", () => {
+      weekPlanManager.stopClock();
+      delete (addon.data as any).weekPlanDialog;
+      ztoolkit.log("周计划窗口已关闭");
     });
 
-    // 窗口关闭时清理
-    dialog.addEventListener("unload", () => {
-      (addon.data as any).weekPlanDialog = null;
-      if (weekPlanManager) {
-        weekPlanManager.stopClock();
+    // 等待窗口加载完成后注入内容
+    dialogWindow.addEventListener("DOMContentLoaded", () => {
+      try {
+        const doc = dialogWindow.document;
+        const appContainer = doc.getElementById("app");
+
+        if (!appContainer) {
+          ztoolkit.log("找不到 app 容器");
+          return;
+        }
+
+        // 创建周计划面板
+        const panel = weekPlanManager.createPlanPanel(dialogWindow);
+        appContainer.appendChild(panel);
+
+        ztoolkit.log("周计划内容注入成功");
+      } catch (e) {
+        ztoolkit.log("注入周计划内容时出错：", e);
       }
     });
   } catch (e) {
-    ztoolkit.log("打开对话框失败:", e);
+    ztoolkit.log("打开周计划窗口时出错：", e);
+    new ztoolkit.ProgressWindow("周计划看板")
+      .createLine({
+        text: `打开窗口失败: ${e}`,
+        type: "error",
+      })
+      .show();
   }
 }
 
@@ -230,14 +194,13 @@ function registerMainToolbarButton(win: Window): void {
   button.setAttribute("type", "button");
   button.setAttribute(
     "image",
-    `chrome://${addon.data.config.addonRef}/content/icons/toolbar-icon.svg`,
+    `chrome://${addon.data.config.addonRef}/content/icons/weekplan-toolbar.svg`,
   );
   button.addEventListener("command", () => {
     const mgr: WeekPlanManager =
       (addon.data as any).weekPlanManager || new WeekPlanManager();
     (addon.data as any).weekPlanManager = mgr;
-    // 使用独立窗口模式
-    openWeekPlanDialog(win, mgr);
+    openWeekPlanInTab(win, mgr);
   });
 
   toolbar.appendChild(button);
