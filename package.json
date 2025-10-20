@@ -6,19 +6,19 @@
   "config": {
     "addonName": "Zotero Weekly Plan",
     "addonID": "zotero-plan@zotero.org",
-    "addonRef": "zotero-plan",
-    "addonInstance": "ZoteroPlan",
+    "addonRef": "Zotero-Weekly-Plan",
+    "addonInstance": "Zotero Weekly Plan",
     "prefsPrefix": "extensions.zotero.plan"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/windingwind/zotero-plugin-template.git"
+    "url": "git+https://github.com/groele/Zotero-Weekly-Plan.git"
   },
   "author": "Seking",
   "bugs": {
-    "url": "https://github.com/windingwind/zotero-plugin-template/issues"
+    "url": "https://github.com/groele/Zotero-Weekly-Plan"
   },
-  "homepage": "https://github.com/windingwind/zotero-plugin-template#readme",
+  "homepage": "https://github.com/groele/Zotero-Weekly-Plan#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "start": "zotero-plugin serve",

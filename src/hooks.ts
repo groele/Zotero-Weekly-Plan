@@ -109,147 +109,17 @@ function registerWeekPlanPanel(win: Window): void {
   }
 }
 
-/**
- * 打开周计划面板(在当前窗口显示)
- */
-function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
-  const doc = win.document;
 
-  // 检查是否已存在
-  let overlay = doc.getElementById("zoteroplan-overlay");
-  if (overlay) {
-    (overlay as HTMLElement).style.display = "flex";
-    return;
-  }
-
-  // 创建遮罩层
-  overlay = doc.createElement("div");
-  overlay.id = "zoteroplan-overlay";
-  (overlay as HTMLElement).style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  `;
-
-  // 创建内容容器
-  const container = doc.createElement("div");
-  (container as HTMLElement).style.cssText = `
-    background: white;
-    width: 90%;
-    height: 90%;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-  `;
-
-  // 添加关闭按钮
-  const closeBtn = doc.createElement("button");
-  closeBtn.textContent = "×";
-  (closeBtn as HTMLElement).style.cssText = `
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #e03131;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    width: 32px;
-    height: 32px;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 10001;
-  `;
-  closeBtn.addEventListener("click", () => {
-    (overlay as HTMLElement).style.display = "none";
-  });
-
-  // 添加面板
-  container.appendChild(weekPlanManager.createPlanPanel(win));
-  container.appendChild(closeBtn);
-  overlay.appendChild(container);
-  if (doc.body) {
-    doc.body.appendChild(overlay);
-  } else {
-    doc.documentElement?.appendChild(overlay);
-  }
-}
 
 /**
- * 在Zotero的主标签页系统中打开一个内部标签，类似PDF阅读器
+ * 打开周计划窗口 - 统一使用独立对话框
  */
 function openWeekPlanZoteroTab(
   win: Window,
   weekPlanManager: WeekPlanManager,
 ): void {
-  const Tabs: any =
-    (win as any).Zotero_Tabs || ztoolkit.getGlobal("Zotero_Tabs");
-  if (!Tabs) {
-    // 回退到覆盖层方式
-    openWeekPlanTab(win, weekPlanManager);
-    return;
-  }
-
-  const tabId = (addon.data as any).weekPlanTabId || "zoteroplan-tab-internal";
-  // 若已存在同名标签，则直接选中
-  try {
-    if (Tabs.getById && Tabs.getById(tabId)) {
-      Tabs.select(tabId);
-      return;
-    }
-  } catch (e) {
-    ztoolkit.log(e);
-  }
-
-  const title = getString("week-plan-title");
-  const icon = `chrome://${addon.data.config.addonRef}/content/icons/icon.svg`;
-  const htmlUrl = `chrome://${addon.data.config.addonRef}/content/weekplan.html`;
-
-  // 创建一个空白浏览器标签，然后注入我们的面板
-  try {
-    Tabs.add({
-      id: tabId,
-      type: "browser",
-      title,
-      icon,
-      url: htmlUrl,
-      select: true,
-    });
-    (addon.data as any).weekPlanTabId = tabId;
-
-    const inject = () => {
-      try {
-        const tab = Tabs.getById ? Tabs.getById(tabId) : undefined;
-        const browser: any = tab?.browser || tab?.panel || tab?.iframe;
-        const doc = (browser?.contentDocument || browser?.document) as
-          | Document
-          | undefined;
-        if (!doc) {
-          win.setTimeout(inject, 50);
-          return;
-        }
-        const mount = doc.getElementById("app") || doc.body;
-        if (!mount) return;
-        const panel = weekPlanManager.createPlanPanel(win);
-        (mount as HTMLElement).appendChild(panel);
-      } catch (e) {
-        ztoolkit.log(e);
-        win.setTimeout(inject, 50);
-      }
-    };
-    // 延迟注入，等待Zotero完成tab创建
-    win.setTimeout(inject, 0);
-  } catch (e) {
-    ztoolkit.log(e);
-    // 兜底：使用覆盖层方式
-    openWeekPlanTab(win, weekPlanManager);
-  }
+  // 直接使用独立对话框窗口，避免窗口控制重复问题
+  openWeekPlanDialog(win, weekPlanManager);
 }
 
 /**
@@ -313,8 +183,7 @@ function openWeekPlanDialog(
           const panel = weekPlanManager.createPlanPanel(dialog);
           (mount as HTMLElement).appendChild(panel);
 
-          // 添加窗口控制按钮
-          addWindowControls(dialogDoc, dialog);
+          // 不添加自定义窗口控制按钮，使用系统原生的窗口控制
         }
       } catch (e) {
         ztoolkit.log("注入面板失败:", e);
@@ -331,123 +200,6 @@ function openWeekPlanDialog(
   } catch (e) {
     ztoolkit.log("打开对话框失败:", e);
   }
-}
-
-/**
- * 添加窗口控制按钮（全屏、最小化、关闭）
- */
-function addWindowControls(doc: Document, win: Window): void {
-  const container = doc.getElementById("app") || doc.body;
-  if (!container) return;
-
-  const controlsBar = doc.createElement("div");
-  controlsBar.className = "zoteroplan-window-controls";
-  controlsBar.style.cssText = `
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 10000;
-    display: flex;
-    gap: 8px;
-    background: var(--wp-card-bg);
-    padding: 8px;
-    border-radius: 8px;
-    box-shadow: var(--wp-shadow-md);
-    border: 1px solid var(--wp-border-color);
-  `;
-
-  // 全屏按钮
-  const fullscreenBtn = createControlButton(
-    doc,
-    "⛶",
-    "全屏 / Fullscreen",
-    () => {
-      try {
-        if (!doc.fullscreenElement) {
-          doc.documentElement?.requestFullscreen();
-          fullscreenBtn.textContent = "❏";
-        } else {
-          doc.exitFullscreen();
-          fullscreenBtn.textContent = "⛶";
-        }
-      } catch (e) {
-        ztoolkit.log("全屏切换失败:", e);
-      }
-    },
-  );
-
-  // 最小化按钮
-  const minimizeBtn = createControlButton(
-    doc,
-    "─",
-    "最小化 / Minimize",
-    () => {
-      try {
-        win.minimize();
-      } catch (e) {
-        ztoolkit.log("最小化失败:", e);
-      }
-    },
-  );
-
-  // 关闭按钮
-  const closeBtn = createControlButton(
-    doc,
-    "×",
-    "关闭 / Close",
-    () => {
-      win.close();
-    },
-  );
-  closeBtn.style.color = "var(--wp-danger)";
-
-  controlsBar.appendChild(fullscreenBtn);
-  controlsBar.appendChild(minimizeBtn);
-  controlsBar.appendChild(closeBtn);
-
-  (container as HTMLElement).insertBefore(
-    controlsBar,
-    container.firstChild,
-  );
-}
-
-/**
- * 创建控制按钮
- */
-function createControlButton(
-  doc: Document,
-  text: string,
-  title: string,
-  onclick: () => void,
-): HTMLElement {
-  const btn = doc.createElement("button");
-  btn.textContent = text;
-  btn.title = title;
-  btn.style.cssText = `
-    background: transparent;
-    border: 1px solid var(--wp-border-color);
-    color: var(--wp-text-main);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 150ms;
-  `;
-  btn.addEventListener("click", onclick);
-  btn.addEventListener("mouseenter", () => {
-    btn.style.background = "var(--wp-info-light)";
-    btn.style.borderColor = "var(--wp-accent)";
-  });
-  btn.addEventListener("mouseleave", () => {
-    btn.style.background = "transparent";
-    btn.style.borderColor = "var(--wp-border-color)";
-  });
-  return btn;
 }
 
 /**
