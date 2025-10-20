@@ -1,49 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <!-- Zotero 7 风格的周计划图标 -->
-  <!-- 设计理念：日历+任务核对，体现周计划管理 -->
-  
-  <defs>
-    <!-- 主题适配颜色 -->
-    <style>
-      .icon-primary { fill: none; stroke: context-stroke #202020; stroke-width: 1.2; }
-      .icon-secondary { fill: context-fill #4070ff; opacity: 0.15; }
-      .icon-accent { fill: context-fill #4070ff; }
-      .icon-check { fill: none; stroke: #4070ff; stroke-width: 1.3; }
-    </style>
-  </defs>
-  
-  <!-- 日历主体 -->
-  <g class="calendar-body">
-    <!-- 外框 -->
-    <rect x="2" y="2.5" width="12" height="11" rx="1.5" class="icon-primary" stroke-linecap="round" stroke-linejoin="round"/>
-    
-    <!-- 顶部装订条 -->
-    <rect x="2" y="2.5" width="12" height="2.5" rx="1.5" class="icon-accent"/>
-    
-    <!-- 装订圈 -->
-    <line x1="4.5" y1="1.5" x2="4.5" y2="4" class="icon-primary" stroke-linecap="round"/>
-    <line x1="11.5" y1="1.5" x2="11.5" y2="4" class="icon-primary" stroke-linecap="round"/>
-  </g>
-  
-  <!-- 周标记（星期点） -->
-  <g class="week-dots" opacity="0.6">
-    <circle cx="4" cy="7" r="0.6" class="icon-accent"/>
-    <circle cx="6" cy="7" r="0.6" class="icon-accent"/>
-    <circle cx="8" cy="7" r="0.6" class="icon-accent"/>
-    <circle cx="10" cy="7" r="0.6" class="icon-accent"/>
-    <circle cx="12" cy="7" r="0.6" class="icon-accent"/>
-  </g>
-  
-  <!-- 任务条目（三条横线表示任务列表） -->
-  <g class="task-lines">
-    <line x1="4" y1="9" x2="12" y2="9" class="icon-primary" stroke-linecap="round" opacity="0.5"/>
-    <line x1="4" y1="11" x2="12" y2="11" class="icon-primary" stroke-linecap="round" opacity="0.5"/>
-  </g>
-  
-  <!-- 完成标记（右下角核对徽章） -->
-  <g class="check-badge">
-    <circle cx="12" cy="12.5" r="2.8" fill="#4070ff"/>
-    <path d="M10.8 12.5 L11.6 13.3 L13.2 11.7" class="icon-check" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- WeekPlan icon: calendar/kanban hybrid with a check badge. Theming via context-fill/stroke -->
+  <g fill="none" stroke="context-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.25">
+    <!-- calendar body background -->
+    <rect x="1.5" y="2.5" width="13" height="11" rx="2" ry="2" fill="context-fill" opacity="0.12"/>
+
+    <!-- calendar header bar -->
+    <path d="M2.2 5.2h11.6" />
+
+    <!-- binding rings -->
+    <path d="M5 2.2v1.2M11 2.2v1.2" />
+
+    <!-- kanban columns (3) -->
+    <path d="M4.3 6.4v6.1M8 6.4v6.1M11.7 6.4v6.1" opacity=".9"/>
+
+    <!-- sample task cards (subtle) -->
+    <path d="M3.2 7.5h1.8M3.2 9.1h1.8M6.8 8.2h1.8M10.4 10.2h1.8" opacity=".9"/>
+
+    <!-- check badge -->
+    <circle cx="11.8" cy="4.1" r="2.2" fill="context-fill" opacity=".22"/>
+    <path d="M10.4 4.1l.9.9 1.9-1.9" />
   </g>
 </svg>
 

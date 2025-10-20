@@ -66,12 +66,12 @@ async function onMainWindowLoad(win: Window): Promise<void> {
  * 注册周计划面板
  */
 function registerWeekPlanPanel(win: Window): void {
+  const doc = win.document;
   const weekPlanManager = new WeekPlanManager();
   // 缓存实例供其他入口复用
   (addon.data as any).weekPlanManager = weekPlanManager;
 
-  // 添加到 Zotero 工具菜单
-  const doc = win.document;
+  // 添加到Zotero工具栏
   const toolsMenu = doc.getElementById("menu_Tools");
   if (toolsMenu) {
     const menuSeparator = doc.createElement("menuseparator");
@@ -82,85 +82,173 @@ function registerWeekPlanPanel(win: Window): void {
     weekPlanMenuItem.setAttribute("label", getString("week-plan-menu"));
     weekPlanMenuItem.setAttribute("accesskey", "P");
     weekPlanMenuItem.addEventListener("command", () => {
-      openWeekPlanInTab(win, weekPlanManager);
+      openWeekPlanZoteroTab(win, weekPlanManager);
     });
     toolsMenu.appendChild(weekPlanMenuItem);
+  }
+
+  // 添加到Zotero右侧面板
+  const tabbox = doc.getElementById("zotero-item-pane-tabbox");
+  if (tabbox) {
+    const tabs = doc.getElementById("zotero-item-pane-tabs");
+    const tabpanels = doc.getElementById("zotero-item-pane-tabpanels");
+
+    if (tabs && tabpanels) {
+      // 创建标签页
+      const tab = doc.createElement("tab");
+      tab.id = "zoteroplan-tab";
+      tab.setAttribute("label", getString("week-plan-tab"));
+      tabs.appendChild(tab);
+
+      // 创建标签面板
+      const tabpanel = doc.createElement("tabpanel");
+      tabpanel.id = "zoteroplan-tabpanel";
+      tabpanel.appendChild(weekPlanManager.createPlanPanel(win));
+      tabpanels.appendChild(tabpanel);
+    }
   }
 }
 
 /**
- * 在独立窗口中打开周计划
- * 使用 Zotero 对话框系统
+ * 打开周计划面板(在当前窗口显示)
  */
-function openWeekPlanInTab(
+function openWeekPlanTab(win: Window, weekPlanManager: WeekPlanManager): void {
+  const doc = win.document;
+
+  // 检查是否已存在
+  let overlay = doc.getElementById("zoteroplan-overlay");
+  if (overlay) {
+    (overlay as HTMLElement).style.display = "flex";
+    return;
+  }
+
+  // 创建遮罩层
+  overlay = doc.createElement("div");
+  overlay.id = "zoteroplan-overlay";
+  (overlay as HTMLElement).style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  // 创建内容容器
+  const container = doc.createElement("div");
+  (container as HTMLElement).style.cssText = `
+    background: white;
+    width: 90%;
+    height: 90%;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  `;
+
+  // 添加关闭按钮
+  const closeBtn = doc.createElement("button");
+  closeBtn.textContent = "×";
+  (closeBtn as HTMLElement).style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #e03131;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10001;
+  `;
+  closeBtn.addEventListener("click", () => {
+    (overlay as HTMLElement).style.display = "none";
+  });
+
+  // 添加面板
+  container.appendChild(weekPlanManager.createPlanPanel(win));
+  container.appendChild(closeBtn);
+  overlay.appendChild(container);
+  if (doc.body) {
+    doc.body.appendChild(overlay);
+  } else {
+    doc.documentElement?.appendChild(overlay);
+  }
+}
+
+/**
+ * 在Zotero的主标签页系统中打开一个内部标签，类似PDF阅读器
+ */
+function openWeekPlanZoteroTab(
   win: Window,
   weekPlanManager: WeekPlanManager,
 ): void {
+  const Tabs: any =
+    (win as any).Zotero_Tabs || ztoolkit.getGlobal("Zotero_Tabs");
+  if (!Tabs) {
+    // 回退到覆盖层方式
+    openWeekPlanTab(win, weekPlanManager);
+    return;
+  }
+
+  const tabId = (addon.data as any).weekPlanTabId || "zoteroplan-tab-internal";
+  // 若已存在同名标签，则直接选中
   try {
-    // 检查是否已经打开
-    if ((addon.data as any).weekPlanDialog) {
-      (addon.data as any).weekPlanDialog.focus();
+    if (Tabs.getById && Tabs.getById(tabId)) {
+      Tabs.select(tabId);
       return;
     }
+  } catch (e) {
+    ztoolkit.log(e);
+  }
 
-    // 创建对话框窗口
-    const dialogData: { [key: string]: any } = {
-      weekPlanManager,
-      loadCallback: () => {
-        ztoolkit.log("周计划窗口加载完成");
-      },
-    };
+  const title = getString("week-plan-title");
+  const icon = `chrome://${addon.data.config.addonRef}/content/icons/icon.svg`;
+  const htmlUrl = `chrome://${addon.data.config.addonRef}/content/weekplan.html`;
 
-    const dialogWindow = win.openDialog(
-      `chrome://${addon.data.config.addonRef}/content/weekplan.html`,
-      `${addon.data.config.addonRef}-weekplan-window`,
-      `chrome,centerscreen,resizable,width=1200,height=800`,
-      dialogData,
-    ) as Window | null;
-
-    if (!dialogWindow) {
-      ztoolkit.log("无法创建对话框窗口");
-      return;
-    }
-
-    // 保存窗口引用
-    (addon.data as any).weekPlanDialog = dialogWindow;
-
-    // 监听窗口关闭
-    dialogWindow.addEventListener("unload", () => {
-      weekPlanManager.stopClock();
-      delete (addon.data as any).weekPlanDialog;
-      ztoolkit.log("周计划窗口已关闭");
+  // 创建一个空白浏览器标签，然后注入我们的面板
+  try {
+    Tabs.add({
+      id: tabId,
+      type: "browser",
+      title,
+      icon,
+      url: htmlUrl,
+      select: true,
     });
+    (addon.data as any).weekPlanTabId = tabId;
 
-    // 等待窗口加载完成后注入内容
-    dialogWindow.addEventListener("DOMContentLoaded", () => {
+    const inject = () => {
       try {
-        const doc = dialogWindow.document;
-        const appContainer = doc.getElementById("app");
-
-        if (!appContainer) {
-          ztoolkit.log("找不到 app 容器");
+        const tab = Tabs.getById ? Tabs.getById(tabId) : undefined;
+        const browser: any = tab?.browser || tab?.panel || tab?.iframe;
+        const doc = (browser?.contentDocument || browser?.document) as
+          | Document
+          | undefined;
+        if (!doc) {
+          win.setTimeout(inject, 50);
           return;
         }
-
-        // 创建周计划面板
-        const panel = weekPlanManager.createPlanPanel(dialogWindow);
-        appContainer.appendChild(panel);
-
-        ztoolkit.log("周计划内容注入成功");
+        const mount = doc.getElementById("app") || doc.body;
+        if (!mount) return;
+        const panel = weekPlanManager.createPlanPanel(win);
+        (mount as HTMLElement).appendChild(panel);
       } catch (e) {
-        ztoolkit.log("注入周计划内容时出错：", e);
+        ztoolkit.log(e);
+        win.setTimeout(inject, 50);
       }
-    });
+    };
+    // 延迟注入，等待Zotero完成tab创建
+    win.setTimeout(inject, 0);
   } catch (e) {
-    ztoolkit.log("打开周计划窗口时出错：", e);
-    new ztoolkit.ProgressWindow("周计划看板")
-      .createLine({
-        text: `打开窗口失败: ${e}`,
-        type: "error",
-      })
-      .show();
+    ztoolkit.log(e);
+    // 兜底：使用覆盖层方式
+    openWeekPlanTab(win, weekPlanManager);
   }
 }
 
@@ -192,13 +280,13 @@ function registerMainToolbarButton(win: Window): void {
   button.setAttribute("type", "button");
   button.setAttribute(
     "image",
-    `chrome://${addon.data.config.addonRef}/content/icons/weekplan-toolbar.svg`,
+    `chrome://${addon.data.config.addonRef}/content/icons/toolbar-icon.svg`,
   );
   button.addEventListener("command", () => {
     const mgr: WeekPlanManager =
       (addon.data as any).weekPlanManager || new WeekPlanManager();
     (addon.data as any).weekPlanManager = mgr;
-    openWeekPlanInTab(win, mgr);
+    openWeekPlanZoteroTab(win, mgr);
   });
 
   toolbar.appendChild(button);

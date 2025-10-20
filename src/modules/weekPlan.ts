@@ -640,7 +640,8 @@ export class WeekPlanManager {
       `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     taskElement.dataset.created = taskData.created || new Date().toISOString();
     taskElement.dataset.priority = taskData.priority || "none";
-    taskElement.draggable = true;
+    // 关键：设置任务元素可拖拽
+    taskElement.setAttribute("draggable", "true");
 
     if (taskData.tags && taskData.tags.length > 0) {
       taskElement.dataset.tags = taskData.tags.join(",");
@@ -657,25 +658,33 @@ export class WeekPlanManager {
       priorityBadge = `<span class="zoteroplan-priority-badge ${taskData.priority}"></span>`;
     }
 
+    // 添加拖拽手柄
+    const dragHandle = this.panelDoc.createElement("div");
+    dragHandle.className = "zoteroplan-task-drag-handle";
+    dragHandle.innerHTML = "⋮";
+    dragHandle.title = "拖拽移动任务";
+    taskElement.appendChild(dragHandle);
+
     // 任务内容
     const content = this.panelDoc.createElement("div");
     content.className = "zoteroplan-task-content";
     content.textContent = taskData.text || "";
     content.contentEditable = "true";
-    content.setAttribute("spellcheck", "false"); // 禁用拼写检查
+    content.setAttribute("spellcheck", "false");
+    content.setAttribute("draggable", "false"); // 禁止内容区域拖拽
     content.addEventListener("blur", () => this.saveForWeek());
 
-    // 阻止内容编辑区域触发拖拽 - 关键修复！
-    content.addEventListener("mousedown", (e: Event) => {
-      e.stopPropagation(); // 阻止事件冒泡到任务元素
-    });
+    // 阻止内容区域的拖拽事件冒泡
+    content.addEventListener(
+      "dragstart",
+      (e: Event) => {
+        e.stopPropagation();
+        e.preventDefault();
+      },
+      true,
+    );
 
-    content.addEventListener("dragstart", (e: Event) => {
-      e.preventDefault(); // 阻止内容区域的拖拽
-      e.stopPropagation();
-    });
-
-    // 双击复制任务内容到剪贴板 - 新增功能！
+    // 双击复制任务内容
     content.addEventListener("dblclick", (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
@@ -684,14 +693,10 @@ export class WeekPlanManager {
       if (!text) return;
 
       try {
-        // 使用 Zotero 的剪贴板 API
         const clipboardHelper = (Components.classes as any)[
           "@mozilla.org/widget/clipboardhelper;1"
         ].getService((Components.interfaces as any).nsIClipboardHelper);
         clipboardHelper.copyString(text);
-
-        // 显示复制成功提示
-        this.showCopyFeedback(content, "已复制！");
 
         // 选中全部文本
         const selection = this.panelDoc!.defaultView?.getSelection();
@@ -703,7 +708,6 @@ export class WeekPlanManager {
         ztoolkit.log("任务内容已复制:", text);
       } catch (err) {
         ztoolkit.log("复制失败:", err);
-        this.showCopyFeedback(content, "复制失败", true);
       }
     });
 
@@ -711,17 +715,15 @@ export class WeekPlanManager {
     content.addEventListener("keydown", (e: KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        content.blur(); // 退出编辑模式，触发保存
+        content.blur();
       }
-      // Esc键取消编辑
       if (e.key === "Escape") {
         e.preventDefault();
-        content.textContent = taskData.text || ""; // 恢复原内容
+        content.textContent = taskData.text || "";
         content.blur();
       }
     });
 
-    // 鼠标悬停时显示提示
     content.title = "双击复制 | Enter保存 | Shift+Enter换行 | Esc取消";
 
     // 标签
@@ -775,14 +777,8 @@ export class WeekPlanManager {
     meta.appendChild(delBtn);
     taskElement.appendChild(meta);
 
-    // 不再在这里添加拖拽事件监听器，使用事件委托处理
-    // 拖拽事件已在 addEventListeners() 中统一处理
-
-    // 右键菜单（可扩展）
-    taskElement.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      // 这里可以添加右键菜单功能
-    });
+    // 不再在这里添加拖拽事件监听器
+    // 所有拖拽事件通过 addEventListeners() 中的事件委托统一处理
 
     return taskElement;
   }
@@ -847,7 +843,7 @@ export class WeekPlanManager {
   }
 
   /**
-   * 添加拖拽相关事件监听器
+   * 添加拖拽相关事件监听器 - 使用事件委托模式
    */
   private addEventListeners(): void {
     if (!this.panelDoc) return;
@@ -858,263 +854,249 @@ export class WeekPlanManager {
       return;
     }
 
-    ztoolkit.log("开始初始化拖拽功能");
-
-    // 拖拽增强：使用放置指示器，精确定位插入点，修复空列表及顶部/底部判定
+    // 拖拽状态管理
     let draggedEl: HTMLElement | null = null;
     const dropIndicator = this.panelDoc.createElement("div");
     dropIndicator.className = "zoteroplan-drop-indicator";
 
-    // 事件：dragstart - 统一绑定在看板容器上，使用事件委托
-    board.addEventListener("dragstart", (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (!target || !target.classList.contains("zoteroplan-task")) {
-        ztoolkit.log("拖拽的不是任务元素", target);
-        return;
-      }
+    // 事件：dragstart - 使用捕获阶段
+    board.addEventListener(
+      "dragstart",
+      (e: Event) => {
+        const dragEvent = e as DragEvent;
+        const target = dragEvent.target as HTMLElement;
 
-      draggedEl = target;
-      draggedEl.classList.add("dragging");
+        // 确认是任务元素
+        if (!target || !target.classList.contains("zoteroplan-task")) {
+          ztoolkit.log("拖拽的不是任务元素", target);
+          return;
+        }
 
-      const dragEvent = e as DragEvent;
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.effectAllowed = "move";
-        dragEvent.dataTransfer.setData(
-          "text/plain",
-          draggedEl.dataset.id || "",
-        );
-      }
+        draggedEl = target;
+        draggedEl.classList.add("dragging", "zoteroplan-task-dragging"); // 添加两个类名保证兼容
 
-      ztoolkit.log("开始拖拽任务:", draggedEl.dataset.id);
-    });
+        // 设置拖拽数据
+        if (dragEvent.dataTransfer) {
+          dragEvent.dataTransfer.effectAllowed = "move";
+          dragEvent.dataTransfer.setData(
+            "text/plain",
+            draggedEl.dataset.id || "",
+          );
+          try {
+            dragEvent.dataTransfer.setDragImage(draggedEl, 20, 20);
+          } catch (err) {
+            // 忽略错误
+          }
+        }
+
+        ztoolkit.log("开始拖拽任务:", draggedEl.dataset.id);
+      },
+      true,
+    ); // 捕获阶段
 
     // 事件：dragend - 清理拖拽状态
-    board.addEventListener("dragend", (e: Event) => {
-      ztoolkit.log("拖拽结束");
+    board.addEventListener(
+      "dragend",
+      (e: Event) => {
+        ztoolkit.log("拖拽结束");
 
-      if (draggedEl) {
-        draggedEl.classList.remove("dragging");
-        draggedEl = null;
-      }
-      dropIndicator.remove();
-
-      // 清理所有列的 drag-over 状态
-      this.columns.forEach((col) => {
-        const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-        if (listEl) {
-          listEl.classList.remove("drag-over");
+        if (draggedEl) {
+          draggedEl.classList.remove("dragging", "zoteroplan-task-dragging");
+          draggedEl = null;
         }
-      });
+        dropIndicator.remove();
 
-      // 保存数据并更新UI
-      this.saveForWeek();
-      this.applySearchFilter();
-    });
+        // 清理所有列的 drag-over 状态
+        this.columns.forEach((col) => {
+          const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+          if (listEl) {
+            listEl.classList.remove("drag-over");
+          }
+        });
+
+        // 保存数据并更新UI
+        this.saveForWeek();
+        this.applySearchFilter();
+      },
+      true,
+    ); // 捕获阶段
 
     // 事件：dragover - 显示放置指示器
-    board.addEventListener("dragover", (e: DragEvent) => {
-      if (!draggedEl) return;
-      e.preventDefault();
-      e.stopPropagation();
+    board.addEventListener(
+      "dragover",
+      (e: DragEvent) => {
+        // 关键：始终 preventDefault
+        e.preventDefault();
+        e.stopPropagation();
 
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = "move";
-      }
-
-      // 找到目标列表 - 改进选择器
-      let targetList: HTMLElement | null = null;
-      let target = e.target as Element;
-
-      // 向上查找直到找到列表容器
-      while (target && target !== board) {
-        if (
-          target.classList &&
-          target.classList.contains("zoteroplan-col-list")
-        ) {
-          targetList = target as HTMLElement;
-          break;
+        if (e.dataTransfer) {
+          e.dataTransfer.dropEffect = "move";
         }
-        target = target.parentElement as Element;
-      }
 
-      // 清理所有列表的 drag-over 状态
-      this.columns.forEach((col) => {
-        const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-        if (el) {
-          el.classList.remove("drag-over");
+        if (!draggedEl) {
+          return;
         }
-      });
 
-      if (!targetList) {
-        dropIndicator.remove();
-        return;
-      }
+        // 找到目标列表
+        let targetList: HTMLElement | null = null;
+        let target = e.target as Element;
 
-      targetList.classList.add("drag-over");
-
-      // 计算应该放置的位置
-      const afterElement = this.getDragAfterElement(targetList, e.clientY);
-
-      if (afterElement === null) {
-        // 放在列表末尾
-        targetList.appendChild(dropIndicator);
-      } else if (afterElement === undefined) {
-        // 放在列表开头
-        if (targetList.firstChild) {
-          targetList.insertBefore(dropIndicator, targetList.firstChild);
-        } else {
-          targetList.appendChild(dropIndicator);
+        // 向上查找直到找到列表容器
+        while (target && target !== board) {
+          if (
+            target.classList &&
+            target.classList.contains("zoteroplan-col-list")
+          ) {
+            targetList = target as HTMLElement;
+            break;
+          }
+          target = target.parentElement as Element;
         }
-      } else {
-        // 放在指定元素之前
-        targetList.insertBefore(dropIndicator, afterElement);
-      }
-    });
 
-    // 事件：dragleave - 清理状态
-    board.addEventListener("dragleave", (e: DragEvent) => {
-      const related = e.relatedTarget as Node | null;
-
-      // 只在完全离开看板时清理
-      if (!board.contains(related)) {
+        // 清理所有列表的 drag-over 状态
         this.columns.forEach((col) => {
           const el = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
           if (el) {
             el.classList.remove("drag-over");
           }
         });
-        dropIndicator.remove();
-      }
-    });
+
+        if (!targetList) {
+          dropIndicator.remove();
+          return;
+        }
+
+        targetList.classList.add("drag-over");
+
+        // 计算应该放置的位置
+        const afterElement = this.getDragAfterElement(targetList, e.clientY);
+
+        if (afterElement === null) {
+          // 放在列表末尾
+          targetList.appendChild(dropIndicator);
+        } else if (afterElement === undefined) {
+          // 放在列表开头
+          if (targetList.firstChild) {
+            targetList.insertBefore(dropIndicator, targetList.firstChild);
+          } else {
+            targetList.appendChild(dropIndicator);
+          }
+        } else {
+          // 放在指定元素之前
+          targetList.insertBefore(dropIndicator, afterElement);
+        }
+      },
+      true,
+    ); // 捕获阶段
 
     // 事件：drop - 执行放置操作
-    board.addEventListener("drop", (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+    board.addEventListener(
+      "drop",
+      (e: DragEvent) => {
+        // 关键：必须 preventDefault
+        e.preventDefault();
+        e.stopPropagation();
 
-      ztoolkit.log("执行放置操作");
+        ztoolkit.log("执行放置操作");
 
-      if (!draggedEl) {
-        ztoolkit.log("没有拖拽元素");
-        return;
-      }
-
-      // 找到目标列表 - 改进选择器
-      let targetList: HTMLElement | null = null;
-      let target = e.target as Element;
-
-      while (target && target !== board) {
-        if (
-          target.classList &&
-          target.classList.contains("zoteroplan-col-list")
-        ) {
-          targetList = target as HTMLElement;
-          break;
+        if (!draggedEl) {
+          ztoolkit.log("没有拖拽元素");
+          return;
         }
-        target = target.parentElement as Element;
-      }
 
-      if (!targetList) {
-        ztoolkit.log("找不到目标列表");
-        return;
-      }
+        // 找到目标列表
+        let targetList: HTMLElement | null = null;
+        let target = e.target as Element;
 
-      ztoolkit.log("放置到列表:", targetList.id);
-
-      // 移除空状态提示
-      const emptyState = targetList.querySelector(".zoteroplan-empty-state");
-      if (emptyState) {
-        emptyState.remove();
-      }
-
-      // 执行放置
-      if (dropIndicator.parentNode === targetList) {
-        targetList.insertBefore(draggedEl, dropIndicator);
-      } else {
-        targetList.appendChild(draggedEl);
-      }
-
-      ztoolkit.log("放置成功");
-
-      // 检查源列表是否为空，如果为空则显示空状态
-      this.columns.forEach((col) => {
-        const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
-        if (listEl) {
-          const tasks = listEl.querySelectorAll(".zoteroplan-task");
+        while (target && target !== board) {
           if (
-            tasks.length === 0 &&
-            !listEl.querySelector(".zoteroplan-empty-state")
+            target.classList &&
+            target.classList.contains("zoteroplan-col-list")
           ) {
-            this.showEmptyState(listEl as HTMLElement);
+            targetList = target as HTMLElement;
+            break;
           }
+          target = target.parentElement as Element;
         }
-      });
 
-      // 清理指示器
-      dropIndicator.remove();
+        if (!targetList) {
+          ztoolkit.log("找不到目标列表");
+          return;
+        }
 
-      // 保存数据
-      this.saveForWeek();
-    });
+        ztoolkit.log("放置到列表:", targetList.id);
 
-    ztoolkit.log("拖拽功能初始化完成");
+        // 移除空状态提示
+        const emptyState = targetList.querySelector(".zoteroplan-empty-state");
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        // 执行放置
+        if (dropIndicator.parentNode === targetList) {
+          targetList.insertBefore(draggedEl, dropIndicator);
+        } else {
+          targetList.appendChild(draggedEl);
+        }
+
+        ztoolkit.log("放置成功");
+
+        // 检查源列表是否为空，如果为空则显示空状态
+        this.columns.forEach((col) => {
+          const listEl = this.panelDoc!.getElementById(`zoteroplan-${col}List`);
+          if (listEl) {
+            const tasks = listEl.querySelectorAll(".zoteroplan-task");
+            if (
+              tasks.length === 0 &&
+              !listEl.querySelector(".zoteroplan-empty-state")
+            ) {
+              this.showEmptyState(listEl as HTMLElement);
+            }
+          }
+        });
+      },
+      true,
+    ); // 捕获阶段
   }
 
   /**
-   * 获取拖拽元素应该放置在哪个元素之前
-   *
-   * @param container 目标列表容器
-   * @param y 鼠标的 Y 坐标
-   * @returns
-   *   - Element: 在该元素前插入
-   *   - undefined: 插入到列表顶部（列表为空或在第一个元素上方）
-   *   - null: 插入到列表底部
+   * 获取拖拽元素应该放置在哪个元素之后
    */
+  // 更智能的定位：
+  // - 返回元素: 在该元素前插入
+  // - 返回 undefined: 插入到列表顶部
+  // - 返回 null: 插入到列表底部
   private getDragAfterElement(
     container: Element,
     y: number,
   ): Element | null | undefined {
-    // 获取所有非拖拽中的任务元素
     const candidates: Element[] = Array.from(
-      container.querySelectorAll(".zoteroplan-task:not(.dragging)"),
+      container.querySelectorAll(
+        ".zoteroplan-task:not(.zoteroplan-task-dragging)",
+      ),
     );
-
-    // 空列表时，根据鼠标位置返回不同值
-    if (candidates.length === 0) {
-      const listRect = container.getBoundingClientRect();
-      const listMiddle = listRect.top + listRect.height / 2;
-      // 鼠标在上半部分返回 undefined（顶部），下半部分返回 null（底部）
-      return y < listMiddle ? undefined : null;
-    }
-
-    // 获取列表容器的位置信息
     const listRect = container.getBoundingClientRect();
 
-    // 如果鼠标位置在列表顶部区域（前15%高度），直接返回第一个元素
-    if (y < listRect.top + listRect.height * 0.15) {
-      return candidates[0];
+    if (candidates.length === 0) {
+      // 空列表：根据鼠标在上半/下半返回不同标记
+      const mid = listRect.top + listRect.height / 2;
+      return y < mid ? undefined : null;
     }
 
-    // 减小底部区域判定范围，从10%改为5%，减少意外放置在底部的情况
-    if (y > listRect.bottom - listRect.height * 0.05) {
-      return null;
-    }
+    // 顶部/底部缓冲区域，减少误触
+    const topBuffer = listRect.top + listRect.height * 0.15;
+    const bottomBuffer = listRect.bottom - listRect.height * 0.05;
+    if (y < topBuffer) return candidates[0];
+    if (y > bottomBuffer) return null;
 
-    // 正常计算放置位置 - 更精确的任务间定位
+    // 在任务间查找最近的插入点
     for (let i = 0; i < candidates.length; i++) {
-      const elem = candidates[i] as HTMLElement;
-      const box = elem.getBoundingClientRect();
+      const box = (candidates[i] as HTMLElement).getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
-      if (offset < 0) {
-        return elem;
-      }
+      if (offset < 0) return candidates[i];
     }
 
-    // 只有在鼠标非常接近底部时才默认放在末尾
-    if (y > listRect.bottom - listRect.height * 0.2 && candidates.length > 1) {
-      return candidates[candidates.length - 1];
-    }
-
+    // 默认放在末尾
     return null;
   }
 
@@ -1452,52 +1434,5 @@ export class WeekPlanManager {
     return Math.ceil(
       ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
     );
-  }
-
-  /**
-   * 显示复制反馈提示
-   */
-  private showCopyFeedback(
-    element: HTMLElement,
-    message: string,
-    isError: boolean = false,
-  ): void {
-    if (!this.panelDoc) return;
-
-    // 创建提示元素
-    const feedback = this.panelDoc.createElement("div");
-    feedback.className = "zoteroplan-copy-feedback";
-    feedback.textContent = message;
-    feedback.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: ${isError ? "#fa5252" : "#20c997"};
-      color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-      pointer-events: none;
-      animation: copyFeedbackPulse 0.6s ease-out;
-    `;
-
-    // 添加到任务元素
-    const taskElement = element.closest(".zoteroplan-task") as HTMLElement;
-    if (taskElement) {
-      // 确保父元素是 relative 定位
-      const originalPosition = taskElement.style.position;
-      taskElement.style.position = "relative";
-      taskElement.appendChild(feedback);
-
-      // 600ms 后移除
-      setTimeout(() => {
-        feedback.remove();
-        taskElement.style.position = originalPosition;
-      }, 600);
-    }
   }
 }
