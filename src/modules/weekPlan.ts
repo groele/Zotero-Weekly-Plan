@@ -1,3 +1,4 @@
+import { config } from "../../package.json";
 import { getString } from "../utils/locale";
 
 /**
@@ -57,7 +58,7 @@ export class WeekPlanManager {
    */
   private loadUserConfig(): void {
     try {
-      const configKey = "extensions.zotero.zoteroplan.userConfig";
+      const configKey = `${config.prefsPrefix}.userConfig`;
       const stored = Zotero.Prefs.get(configKey, true) as string;
       if (stored) {
         this.userConfig = { ...this.userConfig, ...JSON.parse(stored) };
@@ -72,7 +73,7 @@ export class WeekPlanManager {
    */
   private saveUserConfig(): void {
     try {
-      const configKey = "extensions.zotero.zoteroplan.userConfig";
+      const configKey = `${config.prefsPrefix}.userConfig`;
       Zotero.Prefs.set(configKey, JSON.stringify(this.userConfig), true);
     } catch (e) {
       ztoolkit.log("Error saving user config:", e);
