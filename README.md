@@ -1,226 +1,176 @@
-# Zotero Weekly Plan / 周计划看板
+<div align="center">
 
-> A modern weekly planning board for Zotero 7 with draggable tasks, independent window, and beautiful responsive UI.
-> 适配 Zotero 7 的现代化周计划看板，支持拖拽、独立窗口与响应式精美界面。
+# Zotero Weekly Plan
 
-[![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](./LICENSE)
-[![Zotero](https://img.shields.io/badge/Zotero-7%2B-red.svg)](https://www.zotero.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+**面向 Zotero 7 的周计划任务看板插件**  
+*Weekly planning board for Zotero 7 with draggable tasks, independent windows, progress tracking, and literature-adjacent productivity workflows.*
 
----
+![Type](https://img.shields.io/badge/type-Zotero%20Plugin-blue?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Zotero%207%2B-red?style=flat-square)
+![Language](https://img.shields.io/badge/language-TypeScript-blueviolet?style=flat-square)
+![Architecture](https://img.shields.io/badge/architecture-task%20board-purple?style=flat-square)
+![License](https://img.shields.io/badge/license-AGPL--3.0-yellow?style=flat-square)
 
-## 📚 Documentation / 文档导航
+Part of **ResearchFlow Lab** — a local-first research productivity ecosystem for literature, manuscripts, data, and scientific visualization.
 
-- 📖 **[中文用户手册](./docs/README-zhCN.md)** - Chinese User Guide
-- 🇫🇷 **[Guide en Français](./docs/README-frFR.md)** - French User Guide
-- 🏗️ **[项目架构说明](./ARCHITECTURE.md)** - Architecture Overview
-- 📂 **[完整文档索引](./docs/README.md)** - Complete Documentation Index
-
----
-
-## Features / 功能特性
-
-- Drag and drop across columns and windows
-  - Same-window reorder and cross-column move
-  - Cross-window drag via serialized task payload
-- Independent window with OS-level controls
-  - Resizable, minimizable, maximizable
-  - Works outside Zotero main window
-- Beautiful and responsive UI
-  - Light/Dark themes, adaptive spacing and font sizing
-  - Smooth board layout with per-column scroll
-- Handy productivity tools
-  - Quick add, inline edit, search, stats and progress
-  - Per-week data saved in Zotero prefs
-
-- 任务拖拽支持（同列/跨列/跨窗口）
-  - 同窗口排序与跨列移动
-  - 通过序列化任务数据实现跨窗口拖拽
-- 独立窗口（系统级控制）
-  - 窗口可调整大小、最小化、最大化
-  - 支持拖出 Zotero 主窗口
-- 精美响应式 UI
-  - 明暗主题、自适应间距与字号
-  - 流畅看板布局与按列滚动
-- 高效工具集
-  - 快速添加、内联编辑、搜索、统计与进度
-  - 每周数据保存于 Zotero 偏好
+</div>
 
 ---
 
-## Install / 安装
+## 01. Overview
 
-### From XPI / 通过 XPI 安装
+**Zotero Weekly Plan** is a Zotero 7 plugin that adds a modern weekly planning board to the literature-management environment. It supports draggable tasks, independent windows, responsive UI, quick task entry, search, progress statistics, and per-week persistence through Zotero preferences.
 
-1. Build the plugin or download the XPI
-   - Local build: see Build section below
-   - The XPI will be available at `.scaffold/build/zotero-weekly-plan.xpi`
-2. Zotero → Tools → Add-ons → Gear → Install Add-on From File → select XPI
-3. Restart Zotero
-
-4. 构建或下载 XPI
-   - 本地构建：见下文“构建”
-   - XPI 默认生成路径：`.scaffold/build/zotero-weekly-plan.xpi`
-5. Zotero → 工具 → 插件 → 齿轮 → 从文件安装 → 选择 XPI
-6. 重启 Zotero
+**Zotero Weekly Plan** 是一个面向 Zotero 7 的周计划看板插件。它将周任务、阅读计划、写作任务和文献管理环境结合起来，适合在 Zotero 内部安排论文阅读、笔记整理、投稿准备和项目推进。
 
 ---
 
-## Usage / 使用
+## 02. Why this project exists
 
-- Open from menu: Tools → 周计划 / Weekly Plan
-- Add tasks in each column; drag to reorder or move across columns
-- Double-click task content to copy; Enter to save, Shift+Enter new line
-- Use header controls to switch weeks and toggle stats
-- Independent window can be dragged outside Zotero and maximized
+Literature management and weekly planning are often separated. Researchers read papers in Zotero, but planning happens in another app, spreadsheet, or paper notebook. Zotero Weekly Plan keeps reading-adjacent tasks close to the library, making it easier to plan literature review, manuscript writing, and project tasks inside the same research environment.
 
-- 通过菜单打开：工具 → 周计划 / Weekly Plan
-- 在各列添加任务；拖拽可排序或跨列移动
-- 双击内容复制；Enter 保存、Shift+Enter 换行
-- 使用顶部控件切换周次与显示统计
-- 独立窗口可拖出 Zotero 并可最大化
+核心目标：
+
+- Add a week-based task board inside Zotero.
+- Support drag-and-drop planning across columns and windows.
+- Provide quick add, edit, search, statistics, and progress tracking.
+- Store task data in Zotero preferences for a lightweight local workflow.
+- Connect weekly planning with literature reading and manuscript workflows.
 
 ---
 
-## Build / 构建
+## 03. Key features
 
-Prerequisites / 前置
+| Module | What it does | 中文说明 |
+|---|---|---|
+| Weekly Board | Organizes tasks by week and board columns | 按周组织任务看板 |
+| Drag and Drop | Supports same-column, cross-column, and cross-window task movement | 支持同列、跨列和跨窗口拖拽 |
+| Independent Window | Opens a resizable, minimizable, maximizable window outside the main Zotero view | 支持独立窗口和系统级窗口控制 |
+| Quick Add | Adds tasks rapidly into weekly columns | 快速新增周任务 |
+| Inline Edit | Edits task content directly inside the board | 支持任务内容内联编辑 |
+| Search and Stats | Searches tasks and displays progress statistics | 支持任务搜索和进度统计 |
+| Theme Adaptation | Supports light and dark visual modes | 支持明暗主题 |
+| Zotero Persistence | Saves weekly data through Zotero preferences | 将周计划数据保存于 Zotero 偏好设置 |
 
-- Node.js 18+ and npm
-- Windows/macOS/Linux with Zotero 7
+---
 
-Commands / 命令
+## 04. Product philosophy
+
+Zotero Weekly Plan follows four design principles:
+
+1. **Literature-adjacent planning** — reading, writing, and project tasks should stay close to the paper library.
+2. **Week-based clarity** — weekly planning should be lightweight and time-bounded.
+3. **Drag-first interaction** — task movement should feel visual and direct.
+4. **Local persistence** — simple planning data should not require a separate server.
+
+---
+
+## 05. Architecture
+
+```text
+Zotero Weekly Plan
+├── Zotero Plugin Layer
+│   ├── menu entry
+│   ├── independent window
+│   └── plugin lifecycle
+├── Board UI Layer
+│   ├── weekly columns
+│   ├── draggable task cards
+│   ├── quick add / inline edit
+│   └── progress statistics
+├── Interaction Layer
+│   ├── same-window drag
+│   ├── cross-column move
+│   └── cross-window drag payload
+└── Data Layer
+    ├── Zotero preferences
+    ├── per-week task data
+    └── UI state persistence
+```
+
+---
+
+## 06. Quick start
+
+Build or download the XPI package, then install it in Zotero:
+
+1. Open Zotero.
+2. Go to **Tools → Add-ons**.
+3. Click the gear icon.
+4. Choose **Install Add-on From File**.
+5. Select the generated `.xpi` package.
+6. Restart Zotero.
+
+Development clone:
 
 ```bash
-npm install
-npm run build       # build to .scaffold/build and type-check
-npm run release     # optional, pack for release (requires git metadata)
+git clone https://github.com/groele/Zotero-Weekly-Plan.git
+cd Zotero-Weekly-Plan
 ```
 
-常见问题 / Notes
-
-- If `npm install` fails due to permission, set project-local cache:
-  ```bash
-  npm config set cache .npm-cache --location=project
-  npm install --no-audit --no-fund --legacy-peer-deps
-  ```
-- 构建输出在 `.scaffold/build`，包括 `update.json` 与 XPI。
-
 ---
 
-## Drag & Drop Notes / 拖拽说明
+## 07. Recommended workflow
 
-- ContentEditable vs Drag
-  - We prevent drag from the editable area and delegate drag to the task card
-  - This avoids event conflicts and ensures reliable dragstart
-- Cross-window
-  - Task payload serialized to `application/x-zoteroplan-task`
-  - On drop, payload is restored if source element is not available
-
-- 可编辑内容与拖拽冲突
-  - 编辑区域阻止拖拽与冒泡，拖拽绑定在任务卡上
-  - 保证 dragstart 稳定触发
-- 跨窗口拖拽
-  - 任务通过自定义 MIME `application/x-zoteroplan-task` 序列化
-  - drop 时若源元素不可用则反序列化重建
-
----
-
-## Window & Layout / 窗口与布局
-
-- Independent dialog with titlebar and OS-level minimize/maximize
-- CSP allows `chrome:` resources; stylesheet loads from `chrome://.../weekPlan.css`
-- Fullscreen adaptive layout: container is a vertical flex, board fills remaining space, per-column scrolls
-
-- 独立对话框，带系统级最小化/最大化
-- CSP 放宽以加载 `chrome:` 资源，样式从 `chrome://.../weekPlan.css` 引入
-- 全屏适配：外层纵向 flex，看板充满剩余高度，列内滚动
-
----
-
-## Troubleshooting / 故障排查
-
-- Window shows blank
-  - Ensure CSP in `addon/content/weekplan.html` includes `chrome:` for default-src and style-src
-  - Remove `noopener` from `openDialog` feature string
-- Cannot drag tasks
-  - Ensure not dragging from the editable area; try dragging from task card edge
-  - Check console logs for dragstart/drop diagnostics
-- Cross-window drop fails
-  - Verify both windows are WeekPlan windows of the plugin
-  - Data transfer must include `application/x-zoteroplan-task`
-
-- 窗口空白
-  - 确认 `addon/content/weekplan.html` 的 CSP 允许 `chrome:` 源
-  - 打开窗口参数中不要包含 `noopener`
-- 无法拖拽
-  - 确保非编辑区域开始拖拽；从卡片边缘按下再移动
-  - 打开控制台查看拖拽日志
-- 跨窗口放置失败
-  - 确认两个窗口均为插件的周计划窗口
-  - 数据传输需包含 `application/x-zoteroplan-task`
-
----
-
-## License / 许可
-
-AGPL-3.0-or-later
-
----
-
-## 📂 Project Structure / 项目结构
-
-```
-Zotero-Weekly-Plan-1.0/
-├── src/              # TypeScript 源代码
-├── addon/            # 插件资源 (HTML/CSS/Locale)
-├── docs/             # 📚 项目文档
-├── typings/          # TypeScript 类型定义
-├── test/             # 测试代码
-└── ARCHITECTURE.md   # 架构详细说明
+```text
+Open Zotero → Open Weekly Plan
+            → Add reading / writing / submission tasks
+            → Drag tasks across weekly columns
+            → Track progress and adjust priorities
+            → Continue literature work in Zotero
 ```
 
-详细架构说明请查看 [ARCHITECTURE.md](./ARCHITECTURE.md)
+Typical use cases:
+
+- Plan papers to read this week.
+- Track manuscript writing tasks.
+- Manage revision-response subtasks.
+- Keep research project actions close to Zotero literature libraries.
 
 ---
 
-## 🎨 Latest Updates / 最新更新
+## 08. Documentation
 
-### v1.0.0 (2025-10-20)
+Existing documentation may include:
 
-- ✨ 全面响应式 UI 优化（320px - 2560px 完美适配）
-- 📱 触摸设备友好优化（44px 最小点击区域）
-- 🎯 6个响应式断点，流畅缩放
-- 🌓 深色/浅色主题完美兼容
-- 📊 优化滚动条和动画效果
-- 📚 完善项目文档和架构说明
+- Chinese user guide
+- French user guide
+- Architecture overview
+- Complete documentation index
 
-查看详细优化内容: [UI 优化报告](./docs/UI_OPTIMIZATION_COMPLETE.md)
+Keep these documents aligned with the ResearchFlow Lab README structure when updating them.
 
 ---
 
-## 🔗 Quick Links / 快速链接
+## 09. Roadmap
 
-| 链接                                          | 说明         |
-| --------------------------------------------- | ------------ |
-| [安装指南](#install--安装)                    | 如何安装插件 |
-| [使用说明](#usage--使用)                      | 基本使用方法 |
-| [构建指南](#build--构建)                      | 从源码构建   |
-| [文档中心](./docs/README.md)                  | 完整文档索引 |
-| [架构说明](./ARCHITECTURE.md)                 | 技术架构详解 |
-| [UI 优化](./docs/UI_OPTIMIZATION_COMPLETE.md) | 界面优化详情 |
-| [故障排查](#troubleshooting--故障排查)        | 常见问题解决 |
+- [ ] Add ResearchFlow project/task export
+- [ ] Add recurring weekly task templates
+- [ ] Add literature-item linked tasks
+- [ ] Add better release packaging documentation
+- [ ] Add screenshots and demo GIFs
+- [ ] Add task backup/export format
+- [ ] Add per-project planning mode
 
 ---
 
-## Acknowledgements / 致谢
+## 10. Privacy and data ownership
 
-- Built on `zotero-plugin-scaffold` and `zotero-plugin-toolkit`
-- 感谢社区用户的反馈与建议，帮助我们不断改进体验
-- Special thanks to all contributors and testers
+Zotero Weekly Plan stores planning data locally through Zotero preferences unless the user manually syncs Zotero data or exports task records. No external server is required for the core weekly planning workflow.
 
 ---
 
-## 📄 License
+## 11. Related projects
 
-AGPL-3.0-or-later - See [LICENSE](./LICENSE) for details
+- **ZoteroPreview** — Zotero preview compatibility and UI improvement fork
+- **ResearchFlow Companion** — research workflow operating system
+- **PaperPilot Pro** — academic search and publisher-page enhancement
+- **ClipNote** — browser-native quick notes and Markdown capture
+
+---
+
+## 12. License
+
+AGPL-3.0 License.
+
+Developed by **Shikun Hou / groele**.
